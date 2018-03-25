@@ -1,129 +1,267 @@
-ThinkPHP 5.0
+ThinkPHP 5.0 入门
 ===============
-
-[![Total Downloads](https://poser.pugx.org/topthink/think/downloads)](https://packagist.org/packages/topthink/think)
-[![Latest Stable Version](https://poser.pugx.org/topthink/think/v/stable)](https://packagist.org/packages/topthink/think)
-[![Latest Unstable Version](https://poser.pugx.org/topthink/think/v/unstable)](https://packagist.org/packages/topthink/think)
-[![License](https://poser.pugx.org/topthink/think/license)](https://packagist.org/packages/topthink/think)
-
-ThinkPHP5在保持快速开发和大道至简的核心理念不变的同时，PHP版本要求提升到5.4，对已有的CBD模式做了更深的强化，优化核心，减少依赖，基于全新的架构思想和命名空间实现，是ThinkPHP突破原有框架思路的颠覆之作，其主要特性包括：
-
- + 基于命名空间和众多PHP新特性
- + 核心功能组件化
- + 强化路由功能
- + 更灵活的控制器
- + 重构的模型和数据库类
- + 配置文件可分离
- + 重写的自动验证和完成
- + 简化扩展机制
- + API支持完善
- + 改进的Log类
- + 命令行访问支持
- + REST支持
- + 引导文件支持
- + 方便的自动生成定义
- + 真正惰性加载
- + 分布式环境支持
- + 更多的社交类库
-
-> ThinkPHP5的运行环境要求PHP5.4以上。
-
 详细开发文档参考 [ThinkPHP5完全开发手册](http://www.kancloud.cn/manual/thinkphp5)
+------
 
-## 目录结构
+# 框架篇
+## 一、命名规范：
+### 下划线法：
+* 函数的命名
+* 配置参数
+* 常量（大写）
+* 数据表和字段
 
-初始的目录结构如下：
+### 驼峰法：
+* 属性的命名
+* 方法的命名
 
-~~~
-www  WEB部署目录（或者子目录）
-├─application           应用目录
-│  ├─common             公共模块目录（可以更改）
-│  ├─module_name        模块目录
-│  │  ├─config.php      模块配置文件
-│  │  ├─common.php      模块函数文件
-│  │  ├─controller      控制器目录
-│  │  ├─model           模型目录
-│  │  ├─view            视图目录
-│  │  └─ ...            更多类库目录
-│  │
-│  ├─command.php        命令行工具配置文件
-│  ├─common.php         公共函数文件
-│  ├─config.php         公共配置文件
-│  ├─route.php          路由配置文件
-│  ├─tags.php           应用行为扩展定义文件
-│  └─database.php       数据库配置文件
-│
-├─public                WEB目录（对外访问目录）
-│  ├─index.php          入口文件
-│  ├─router.php         快速测试文件
-│  └─.htaccess          用于apache的重写
-│
-├─thinkphp              框架系统目录
-│  ├─lang               语言文件目录
-│  ├─library            框架类库目录
-│  │  ├─think           Think类库包目录
-│  │  └─traits          系统Trait目录
-│  │
-│  ├─tpl                系统模板目录
-│  ├─base.php           基础定义文件
-│  ├─console.php        控制台入口文件
-│  ├─convention.php     框架惯例配置文件
-│  ├─helper.php         助手函数文件
-│  ├─phpunit.xml        phpunit配置文件
-│  └─start.php          框架入口文件
-│
-├─extend                扩展类库目录
-├─runtime               应用的运行时目录（可写，可定制）
-├─vendor                第三方类库目录（Composer依赖库）
-├─build.php             自动生成定义文件（参考）
-├─composer.json         composer 定义文件
-├─LICENSE.txt           授权说明文件
-├─README.md             README 文件
-├─think                 命令行入口文件
-~~~
+### 帕斯卡法：
+* 类名
+* 类文件名
+* 类的命名
+------
 
-> router.php用于php自带webserver支持，可用于快速测试
-> 切换到public目录后，启动命令：php -S localhost:8888  router.php
-> 上面的目录结构和名称是可以改变的，这取决于你的入口文件和配置参数。
+# 控制器篇
+## 一、控制器访问
+### 1、命名空间
+命名空间与目录路径对应。
 
-## 命名规范
+如：路径位置为：`application/index/controller/Index.php`
+其文件的命名空间应为：`app\index\controller`
 
-`ThinkPHP5`遵循PSR-2命名规范和PSR-4自动加载规范，并且注意如下规范：
+> 命名空间解释：
+> * `app`对应`application`目录（在入口文件`mypro/public/index.php`中定义的，可根据需求自定义修改）
+> * `index`对应`index`模块
+> * `controller`对应`控制器`位置
 
-### 目录和文件
+### 2、定义类
+类名直接使用该控制器名即可，不需要用Controller结尾
 
-*   目录不强制规范，驼峰和小写+下划线模式均支持；
-*   类库、函数文件统一以`.php`为后缀；
-*   类的文件名均以命名空间定义，并且命名空间的路径和类库文件所在路径一致；
-*   类名和类文件名保持一致，统一采用驼峰法命名（首字母大写）；
+> 如：当前控制器类为`User`控制器，则直接定义该类名为`User`即可。
 
-### 函数和类、属性命名
-*   类的命名采用驼峰法，并且首字母大写，例如 `User`、`UserType`，默认不需要添加后缀，例如`UserController`应该直接命名为`User`；
-*   函数的命名使用小写字母和下划线（小写字母开头）的方式，例如 `get_client_ip`；
-*   方法的命名使用驼峰法，并且首字母小写，例如 `getUserName`；
-*   属性的命名使用驼峰法，并且首字母小写，例如 `tableName`、`instance`；
-*   以双下划线“__”打头的函数或方法作为魔法方法，例如 `__call` 和 `__autoload`；
+### 3、浏览器访问控制器的方法（操作）
+TP5的[路由访问方式][1]采用`PATH_INFO`进行地址访问，不再支持普通模式的URL访问。
 
-### 常量和配置
-*   常量以大写字母和下划线命名，例如 `APP_PATH`和 `THINK_PATH`；
-*   配置参数以小写字母和下划线命名，例如 `url_route_on` 和`url_convert`；
+如果定义了在`index`模块的`index`控制器中定义了方法名为`test`的方法，那么在浏览器中的访问url应为
+`http://mypro.com/index.php/index/index/test`
+（此处将项目名配置了虚拟域名`mypro.com`）
 
-### 数据表和字段
-*   数据表和字段采用小写加下划线方式命名，并注意字段名不要以下划线开头，例如 `think_user` 表和 `user_name`字段，不建议使用驼峰和中文作为数据表字段命名。
+------
 
-## 参与开发
-请参阅 [ThinkPHP5 核心框架包](https://github.com/top-think/framework)。
+# 模型层篇
+## 一、操作数据库
+### 1、数据库连接配置
+数据库默认的相关配置在项目的`application\database.php`中已经定义好。
+只需要在**模块的数据库配置文件**中配置好当前模块需要连接的数据库的配置参数即可。
+> 模块的数据库配置文件的路径为：`application/index/database.php`
 
-## 版权信息
+配置参数  如：**数据库名称**和**端口号**
+```php
+return [
+    // 数据库名
+    'database'    => 'test',
+	// 端口
+    'hostport'    => 3306
+];
+```
 
-ThinkPHP遵循Apache2开源协议发布，并提供免费使用。
+### 2、查看数据库配置详情
+打印`config('database')`即可查看所有配置
 
-本项目包含的第三方源码和二进制文件之版权信息另行标注。
+### 3、[连接数据库][2]
+```php
+$res = Db::connect();
+```
+**注意：**
+> * 需要在文件头引入`Db`类。引入方式为：`use think\Db;`
+> * TP5是憜性加载，即此时虽然已经可以查看到连接数据库的参数信息，但即使配置参数有问题（如数据库不存在）时不会有错误提示。
 
-版权所有Copyright © 2006-2017 by ThinkPHP (http://thinkphp.cn)
+### 4、查询数据
+(1)运行原生SQL语句
+* [query()查询][3] 
+> 支持**参数绑定** 
+```php
+Db::query('select * from think_user where id=?',[8]);
+```
+> 支持**命名占位符绑定**
+```php
+Db::query('select * from think_user where id=:id',['id'=>8]);
+```
+> 支持**多个数据库连接**
+```php
+Db::connect($config)->query('select * from think_user where id=:id',['id'=>8]);
+```
 
-All rights reserved。
+(2)[查询构造器][4]
+* 查询一条数据（结果不存在时，返回**null**）
 
-ThinkPHP® 商标和著作权所有者为上海顶想信息科技有限公司。
+```php
+Db::table('think_user')->where('status',1)->find();
+```
+>【定义了数据表前缀】
+```php
+Db::name('user')->where('status',1)->find();
+```
+> 【助手函数：默认每次都会重新连接数据库】
+```php
+db('user')->where('status',1)->find(); 
+```
+> 【助手函数：使用第三个参数进行单例化，使得每次使用不再重新连接数据库】
+```php
+db('user',[],false)->where('status',1)->find(); 【助手函数：使用第三个参数进行单例化，使得每次使用不再重新连接数据库】
+```
+> 【使用查询对象进行查询】
+```php
+$query = new \think\db\Query();
+$query->table('think_user')->where('status',1);
+Db::find($query);  
+```
+> 【直接使用闭包函数】
+```php
+Db::find(function($query){
+    $query->table('think_user')->where('status',1);
+}); 
+```
 
-更多细节参阅 [LICENSE.txt](LICENSE.txt)
+* 查询多条数据（结果不存在时，返回**空数组**）
+```php
+Db::table('think_user')->where('status',1)->select();
+```
+>【定义了数据表前缀】
+```php
+Db::name('user')->where('status',1)->select();
+```
+> 【助手函数：默认每次都会重新连接数据库】
+```php
+db('user')->where('status',1)->select(); 
+```
+> 【助手函数：使用第三个参数进行单例化，使得每次使用不再重新连接数据库】
+```php
+db('user',[],false)->where('status',1)->select(); 【助手函数：使用第三个参数进行单例化，使得每次使用不再重新连接数据库】
+```
+> 【使用查询对象进行查询】
+```php
+$query = new \think\db\Query();
+$query->table('think_user')->where('status',1);
+Db::select($query);  
+```
+> 【直接使用闭包函数】
+```php
+Db::select(function($query){
+    $query->table('think_user')->where('status',1);
+}); 
+```
+
+* 查询某个字段的值
+```php
+Db::table('think_user')->where('id',1)->value('name');
+```
+
+* 查询某一列的值
+```php
+Db::table('think_user')->where('status',1)->column('name');
+```
+
+* **数据集分批处理**
+
+* **JSON类型数据查询**
+
+### 5、添加数据
+* 添加一条数据`insert()`----添加成功返回1
+```php
+$data = ['foo' => 'bar', 'bar' => 'foo'];
+Db::table('think_user')->insert($data);
+```
+* 添加多条数据`insertAll()`----添加成功返回添加成功的记录条数
+```php
+$data = [
+    ['foo' => 'bar', 'bar' => 'foo'],
+    ['foo' => 'bar1', 'bar' => 'foo1'],
+    ['foo' => 'bar2', 'bar' => 'foo2']
+];
+Db::name('user')->insertAll($data);
+```
+*助手函数
+```php
+// 添加单条数据
+db('user')->insert($data);
+
+// 添加多条数据
+db('user')->insertAll($list);
+```
+*快捷更新(V5.0.5+)
+```php
+Db::table('data')
+    ->data(['name'=>'tp','score'=>1000])
+    ->insert();
+```
+
+------
+
+# 模板篇
+## 一、模板访问
+### 1、没有参数传递
+```php
+$view = new View();
+return $view->fetch();
+```
+此时默认访问的模板路径为：`[模板文件目录]/当前控制器名（小写+下划线）/当前操作名（小写）.html`
+### 2、指定模板（跨模板）
+```php
+$view = new View();
+return $view->fetch('add');
+```
+此时访问的模板路径为：`[模板文件目录]/当前控制器名（小写+下划线）/add.html`
+### 3、指定某个控制器的某个模板(跨控制器)
+```php
+$view = new View();
+return $view->fetch('user/add');
+```
+此时访问的模板路径为：`[模板文件目录]/user/add.html`
+### 4、指定某个模块的某个控制器的某个模板（跨模块）
+```php
+$view = new View();
+return $view->fetch('admin@user/add');
+```
+### 5、全路径模板调用
+```php
+$view = new View();
+return $view->fetch(APP_PATH.request()->module().'/view/public/header.html');
+```
+
+## 二、模板继承
+### 1、定义基础模板
+(基础模板路径：`mypro/application/index/view/index/base.html`)
+在基础模板中定义好需要设置的子模板名称。
+
+子模板定义方式：
+```php
+<block name="子模板名称1">这是默认显示的内容</block>
+```
+
+### 2、在子模板中引入基础模板
+（子模板路径：`mypro/application/index/view/index/index.html`）
+
+引入方式：
+```php
+{extend name="index/base" /}
+``` 
+
+注：`name`是相对于`application`开始的
+
+### 3、定义子模板中的内容
+定义方式：
+```php
+<block name="子模板名称1">这是自定义该子模板需要显示的内容</block>
+```
+
+## 三、模板引擎时间函数
+```php
+{$c.create_time|date="Y-m-d H:i:s",###}
+```
+
+
+[1]: https://www.kancloud.cn/manual/thinkphp5/118012
+[2]: https://www.kancloud.cn/manual/thinkphp5/118059
+[3]: https://www.kancloud.cn/manual/thinkphp5/118060
+[4]: https://www.kancloud.cn/manual/thinkphp5/135176
