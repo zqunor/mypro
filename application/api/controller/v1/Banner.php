@@ -2,8 +2,10 @@
  namespace app\api\controller\v1;
 
  use think\Validate;
+ use think\Exception;
  use app\api\validate\IDMustPositiveInt;
  use app\lib\exception\BannerMissException;
+ use app\api\model\Banner as BannerModel;
 
  class Banner
  {
@@ -16,6 +18,17 @@
      public function getBanner($id)
      {
         (new IDMustPositiveInt())->goCheck();
+        $banner = BannerModel::getBannerById($id);
+        if(!$banner) {
+            // $banner === false
+
+            // throw new BannerMissException();
+            
+            throw new Exception('内部错误！');
+            
+            // 此处BannerMissException必须是继承Exception的类
+        }
+        return $banner;
         //  $data = [
         //      'name' => 'vendor11111',
         //      'email' => 'vendorqq.com'
@@ -45,14 +58,8 @@
         //     return json($err, 400);
         // }
 
-        $banner = model('banner')::getBannerById($id);
-        return $banner;
-        if(!$banner) {
-            // $banner === false
-            throw new BannerMissException();
-            // 此处BannerMissException必须是继承Exception的类
-        }
-        return $banner;
-    
+
+         // AOP 面向切面编程 =》 站在更高的角度，用抽象的方式，统一的、总体的来处理某一个问题
+         // 中间件（TP5中的行为）即是AOP思想的具体应用
      }
  }

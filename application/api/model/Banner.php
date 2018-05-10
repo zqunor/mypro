@@ -1,7 +1,7 @@
 <?php
 namespace app\api\model;
-
-class Banner
+use think\Model;
+class Banner extends Model
 {
     public static function getBannerById($id)
     {
