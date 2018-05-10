@@ -22,9 +22,9 @@
         if(!$banner) {
             // $banner === false
 
-            // throw new BannerMissException();
+            throw new BannerMissException();
             
-            throw new Exception('内部错误！');
+            // throw new Exception('内部错误！'); //用于测试
             
             // 此处BannerMissException必须是继承Exception的类
         }

@@ -5,8 +5,8 @@ use think\Request;
 use think\Exception;
 use think\Log;
 use think\exception\Handle;
-use app\lib\exception\BaseException;
 
+// 在配置文件中用到，作为全局的异常处理类，接收程序抛出的错误信息
 class ExceptionHandler extends Handle
 {
     private $code;
