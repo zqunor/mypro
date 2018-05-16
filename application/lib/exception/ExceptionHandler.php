@@ -2,7 +2,6 @@
 namespace app\lib\exception;
 
 use think\Request;
-use think\Exception;
 use think\Log;
 use think\exception\Handle;
 
@@ -14,7 +13,7 @@ class ExceptionHandler extends Handle
     private $errorCode;
 
     // 渲染所有的错误信息，并返回到客户端
-    public function render(Exception $e)
+    public function render(\Exception $e)
     {
         if($e instanceof BaseException){
             // 如果是自定义的异常处理,需要向客户端返回具体的消息（用户操作导致的异常）
@@ -47,8 +46,22 @@ class ExceptionHandler extends Handle
         return  json($result, $this->code);
     }
 
-    public function recordErrorLog(Exception $e)
+    public function recordErrorLog(\Exception $e)
     {
+        // 将系统程序错误的错误信息写到日志中
+        Log::init(
+            [
+                'type' => 'File',
+                'path' => LOG_PATH,
+                'level' => ['error']
+            ]);
         Log::record($e->getMessage(), 'error');
     }
+
+    // 将Exception修改为全局Exception基类，而不是think\Exception
+
+    // think\Exception => \Exception =>  Throwable
+    // HttpException => \RuntimeException =>  \Exception =>  Throwable
+
+    // 当访问的控制器不存在时，
 }  

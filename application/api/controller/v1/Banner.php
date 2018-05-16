@@ -18,7 +18,9 @@
      public function getBanner($id)
      {
         (new IDMustPositiveInt())->goCheck();
-        $banner = BannerModel::getBannerById($id);
+        // $banner = BannerModel::getBannerById($id);
+        // model/Banner.php继承Model就成为了model,于是就可以使用模型类封装的方法。
+        $banner = BannerModel::get($id);
         if(!$banner) {
             // $banner === false
 
