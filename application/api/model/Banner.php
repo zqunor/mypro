@@ -6,6 +6,13 @@ use think\Model;
 
 class Banner extends Model
 {
+    public function items()
+    {
+        // 参数1：关联模型的模型名
+        // 参数2：关联模型的外键
+        // 参数3：当前模型的主键
+        return $this->hasMany('BannerItem', 'banner_id', 'id');
+    }
     public static function getBannerById($id)
     {
         // 程序编写存在异常，提示服务器内部错误

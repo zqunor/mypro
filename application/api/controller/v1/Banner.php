@@ -20,7 +20,20 @@
         (new IDMustPositiveInt())->goCheck();
         // $banner = BannerModel::getBannerById($id);
         // model/Banner.php继承Model就成为了model,于是就可以使用模型类封装的方法。
-        $banner = BannerModel::get($id);
+        $banner = BannerModel::with(['items', 'items.img'])->find($id);
+        // $banner = model('banner')->with(['items', 'items.img'])->find($id);
+
+        // 隐藏字段
+        // 方法1：将对象转化为数组，再将该字段unset
+        // $banner = $banner->toArray();
+        // unset($banner['delete_time']);
+
+        // 方法2：使用对象的hidden方法
+        // $banner->hidden(['update_time', 'delete_time']);
+
+        // 方法3：只显示指定字段
+        // $banner->visible(['id', 'name']);
+
         if(!$banner) {
             // $banner === false
 
