@@ -4,10 +4,10 @@ namespace app\api\model;
 use think\Db;
 use think\Model;
 
-class Banner extends Model
+class Banner extends BaseModel
 {
     protected $hidden = ['delete_time', 'update_time'];
-    
+
     public function items()
     {
         // 参数1：关联模型的模型名

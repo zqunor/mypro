@@ -369,8 +369,8 @@ define('CONF_PATH', __DIR__ . '/../config/');
 2.读取器的特性：
 
 * 模型具有的性质
-* 使用模型时自动调用的方法
-* AOP思想的一个实现
+* 使用模型时自动调用的方法（访问该属性时调用）
+* AOP 思想的一个实现
 
   3.接收器参数说明：
 
@@ -420,3 +420,45 @@ public function getUrlAttr($value, $data)
     return $finalUrl;
 }
 ```
+
+通过关联模型访问 Image 模型并获取 url 字段信息时调用该方法。
+
+### 8-8 自定义模型基类
+
+1.对于多个模型处理 url 字段时，为增强代码的复用性，可将该处理方法封装到模型类基类`model/BaseModel.php`中。
+
+2.其他的模型类不再直接继承`model`类，而是直接继承`BaseModel`类。
+
+3.又考虑到当前使用的 url 表示的是 img 路径，而其他数据表中的 url 可能并非 img 路径，所以需要再次调整。将`getUrlAttr`功能的具体实现进行拆分。
+
+(1) `model/BaseModel.php`，定义成一个普通的方法
+
+```php
+public function prefixImgUrl($value, $data)
+{
+    $finalUrl = $value;
+    if ($data['from'] == 1) {
+        $prefix = config('setting.img_prefix');
+        $finalUrl = $prefix . $value;
+    }
+
+    return $finalUrl;
+}
+```
+
+(2) `model/Image.php`，读取器中调用基类的方法。
+
+```php
+public function getUrlAttr($value, $data)
+{
+    return $this->prefixImgUrl($value, $data);
+}
+```
+
+(3)分析：将业务逻辑的具体实现集中到一起，简化业务变动时的频繁修改。提高了项目的**扩展性**。
+
+### 8-9 定义 API 版本号
+
+1.为什么要实现多版本？
+
+2.如何实现多版本？
