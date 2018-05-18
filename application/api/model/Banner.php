@@ -6,6 +6,8 @@ use think\Model;
 
 class Banner extends Model
 {
+    protected $hidden = ['delete_time', 'update_time'];
+    
     public function items()
     {
         // 参数1：关联模型的模型名

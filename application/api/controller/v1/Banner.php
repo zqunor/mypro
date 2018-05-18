@@ -43,6 +43,7 @@
             
             // 此处BannerMissException必须是继承Exception的类
         }
+
         return json($banner);
         //  $data = [
         //      'name' => 'vendor11111',
