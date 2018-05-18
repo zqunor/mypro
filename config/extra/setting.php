@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'img_prefix' => 'http://mypro.com/images'
+    'img_prefix' => 'http://mypro.com/static/images'
 ];

@@ -339,7 +339,7 @@ TP5 扩展配置目录 =》自动加载该目录下的配置文件
 ```php
 // application/extra/setting.php
 return [
-  'img_prefix' => 'http://mypro.com/images'
+  'img_prefix' => 'http://mypro.com/static/images'
 ];
 ```
 
@@ -389,7 +389,7 @@ public function getUrlAttr($value)
 }
 ```
 
-url 字段被自动拼接成：`"url": "http://mypro.com/images/banner-4a.png"`形式
+url 字段被自动拼接成：`"url": "http://mypro.com/static/images/banner-4a.png"`形式
 
 5.根据业务逻辑进行调整
 

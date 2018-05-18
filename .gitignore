@@ -2,4 +2,5 @@
 .vscode
 composer.lock
 *.log
+log
 thinkphp
