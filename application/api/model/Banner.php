@@ -44,6 +44,5 @@ class Banner extends BaseModel
             ->select();
 
         return $result;
-
     }
 }

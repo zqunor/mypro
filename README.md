@@ -461,4 +461,71 @@ public function getUrlAttr($value, $data)
 
 1.为什么要实现多版本？
 
+由于业务调整，实现的功能需要进行变更，（处理同一个问题需要使用不同解决方式），并且之前的功能还需要兼容，此时如果通过判断条件进行判断，再执行相应的功能会使得代码冗余，违背代码的**开闭原则**。应该将代码分离出来，每一个版本做一个单独的代码模块。
+
+> 开闭原则：对扩展是开放的，对修改是封闭的。（以扩展的形式修改代码）
+
 2.如何实现多版本？
+
+* 目录设置:
+
+```info
+application
+    |__ api
+        |__ controller
+            |__ v1
+                |__ Banner.php
+            |__ v2
+                |__ Banner.php
+```
+
+* 路由设置：
+
+```php
+// 动态参数 :version 动态访问相应版本
+Route::get('api/:version/banner/:id', 'api/:version.Banner/getBanner');
+```
+
+### 8-10 专题接口模型分析
+
+* theme 专题表
+  `theme(id,name,description,topic_img_id,delete_time,head_img_id,update_time)`
+
+      `topic_img_id` 首页主题入口的img图片
+      `head_img_id` 进入相应主题显示的head图片
+
+* product 产品表
+  `product(id,name,price,stock,delete_time,category_id,main_img_url,from,create_time,update_time,summary,img_id)`
+
+      `main_img_url`
+      `img_id`
+
+* theme_product 专题-产品关联表
+  `theme_product(theme_id,product_id)`
+
+      theme <=> product 多对多关系
+      theme_product 多对多关系表中需要一个关联表连接两者关系
+
+### 8-11 一对一关系解析
+
+    theme <=> image 一对一关系
+
+1.一对一关系的表示方法（有主从关系）：
+
+    hasOne()
+    belongsTo()
+
+外键存储在其中一张表里，所以需要使用`hasOne`和`belongsTo`来区分。
+
+    有外键的表`belongsTo`无外键的表
+    无外键的表`hasOne`有外键的表
+
+### 8-12 Theme接口验证与重构
+
+### 8-13 完成Theme简要信息接口
+
+### 8-14 开启路由完整匹配
+
+### 8-16 数据库字段冗余的合理利用**
+
+多对多关系的数据表关联查询时会自动多一个`pivot`字段的信息，存储关联字段

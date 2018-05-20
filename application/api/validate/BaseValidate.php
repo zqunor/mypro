@@ -6,9 +6,9 @@ use think\Validate;
 use think\Request;
 use app\lib\exception\ParameterException;
 
-class BaseValidate extends Validate 
+class BaseValidate extends Validate
 {
-    public function goCheck() 
+    public function goCheck()
     {
         $request = Request::instance();
         $params = $request->param();
@@ -27,10 +27,19 @@ class BaseValidate extends Validate
             // $e->msg = $this->error;
             // $e->errorCode = 10002;
             // 以上两种写法的第一种写法的可读性更好，更面向对象一点，参数应该是实例化对象时就产生的，而不是之后
-            
+
             throw $e;
         }else{
             return true;
+        }
+    }
+
+    protected function isPositiveInteger($value)
+    {
+        if (is_numeric($value) && is_int($value+0) && ($value +0)>0) {
+            return true;
+        } else {
+            return false;
         }
     }
 }
