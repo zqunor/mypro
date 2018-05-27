@@ -601,7 +601,7 @@ protected function checkIDs($values)
 }
 ```
 
-(5)**扩展**:
+3.**扩展**:
 
 IDCollection 和 IDMustPositiveInt 都用到对 id 是正整数的验证，为提高代码的复用性，可以：
 
@@ -627,14 +627,14 @@ protected function isPositiveInteger($value)
 }
 ```
 
-(6)调用验证器
+4.调用验证器
 
 ```php
 // api/controller/v1/Theme.php
 (new IDCollection())->goCheck();
 ```
 
-(7)测试 url
+5.测试 url
 
 ```url
 http://mypro.com/api/v1/theme?ids=0.1,2,3
