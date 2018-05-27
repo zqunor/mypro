@@ -12,6 +12,11 @@ class IDCollection extends BaseValidate
     ];
 
     // $values = id1,id2,...
+    /**
+     * 验证ids
+     * @param string $values = id1,id2,id3,...
+     * @return bool true/false
+     */
     protected function checkIDs($values)
     {
         $ids = explode(',', $values);

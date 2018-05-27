@@ -9,7 +9,13 @@ use app\api\validate\IDMustPositiveInt;
 
 class Theme extends Controller
 {
-    public function getSimpleList($ids)
+    /**
+     * 获取需要的主题theme
+     *
+     * @param string $ids
+     * @return string $theme 一组theme模型
+     */
+    public function getSimpleList($ids='')
     {
         (new IDCollection())->goCheck();
 

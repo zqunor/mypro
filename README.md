@@ -520,12 +520,131 @@ Route::get('api/:version/banner/:id', 'api/:version.Banner/getBanner');
     有外键的表`belongsTo`无外键的表
     无外键的表`hasOne`有外键的表
 
-### 8-12 Theme接口验证与重构
+theme -- (topic_img_id, head_img_id) -- 表中有外键 (对应 image 表中的 id 主键)
+=》 theme topicImg belongsTo image
 
-### 8-13 完成Theme简要信息接口
+image -- 表中没有外键
+=》 image hasOne theme
+
+### 8-12 Theme 接口验证与重构
+
+1.Theme 接口实现的不同方法对比：
+
+（1）客户端只负责调用接口，由接口确定需要返回的主题 theme 的 id 号（2）由客户端传入具体需要的主题 Theme 的 id 号（前端有更大的灵活性）
+
+2.方法实现
+
+步骤：
+
+(1)定义控制器方法名
+
+```php
+// api/controller/v1/Theme.php
+getSimpleList();
+```
+
+(2)路由文件定义路由
+
+```php
+// config/route.php
+Route::get('api/:version/theme', 'api/:version.Theme/getSimpleList');
+```
+
+(3)控制器方法具体实现业务功能（一） --- 参数要求
+
+```php
+/**
+ * 获取需要展示的主题theme
+ * @Location api/controller/v1/Theme.php
+ * @param string $ids
+ * @return string $theme
+ */
+```
+
+(4)验证器验证
+
+```php
+// api/validate/IDCollection.php
+
+// 1.验证规则
+protected $rule = [
+    'ids' => 'require|checkIDs'
+];
+
+// 2.验证不通过的提示信息
+protected $message = [
+    'ids' => 'ids必须是以逗号隔开的多个正整数'
+];
+
+// 3.自定义验证方法(验证器)
+/**
+ * 验证ids
+ * @param string $values = id1,id2,id3,...
+ * @return bool false/true
+ */
+protected function checkIDs($values)
+{
+    $ids = explode(',', $values);
+
+    if (empty($ids)) {
+        return false;
+    }
+    foreach ($ids as $id) {
+        // 每个id必须是正整数
+        $res = $this->isPositiveInteger($id);
+        if (!$res) {
+            return false;
+        }
+
+        return true;
+    }
+}
+```
+
+(5)**扩展**:
+
+IDCollection 和 IDMustPositiveInt 都用到对 id 是正整数的验证，为提高代码的复用性，可以：
+
+    （1）将isPositiveInteger提取到公共方法中（没有内聚性）
+
+    （2）将方法重新定义到验证器基类中供所有验证器之类调用。（优化的选择）
+
+```php
+// api/validate/BaseValidate.php
+/**
+ * 验证是否是正整数
+ *
+ * @param int $value
+ * @return boolean false/true
+ */
+protected function isPositiveInteger($value)
+{
+    if (is_numeric($value) && is_int($value+0) && ($value +0)>0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+```
+
+(6)调用验证器
+
+```php
+// api/controller/v1/Theme.php
+(new IDCollection())->goCheck();
+```
+
+(7)测试 url
+
+```url
+http://mypro.com/api/v1/theme?ids=0.1,2,3
+http://mypro.com/api/v1/theme?ids=1,s,3
+```
+
+### 8-13 完成 Theme 简要信息接口
 
 ### 8-14 开启路由完整匹配
 
-### 8-16 数据库字段冗余的合理利用**
+### 8-16 数据库字段冗余的合理利用\*\*
 
 多对多关系的数据表关联查询时会自动多一个`pivot`字段的信息，存储关联字段
