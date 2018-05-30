@@ -643,6 +643,59 @@ http://mypro.com/api/v1/theme?ids=1,s,3
 
 ### 8-13 完成 Theme 简要信息接口
 
+1.完成获取信息接口
+
+```php
+// api/controller/v1/Theme.php
+public function getSimpleList($ids='')
+{
+    // 验证用户传递的参数
+    (new IDCollection())->goCheck();
+
+    $ids = explode(',', $ids);
+
+    // 关联Image表获取相应信息
+    $theme = model('theme')->with(['topicImg', 'headImg'])->select($ids);
+
+    // 无查询结果时，进行异常处理
+    if (!$theme) {
+        throw new ThemeMissException();
+    }
+
+    // 对数组格式的返回数据进行json格式化
+    return json($theme);
+}
+```
+
+2.完成异常处理类
+
+```php
+// application/lib/exception/ThemeMissException.php
+public $code = 404;
+public $msg = '请求的主题不存在';
+public $errorCode = 30000;
+```
+
+3.在相应的模型中隐藏部分字段
+
+(1)隐藏 Theme 表的部分字段
+
+```php
+// api/model/v1/Theme.php
+protected $hidden = ['delete_time', 'update_time', 'topic_img_id', 'head_img_id'];
+```
+
+(2)隐藏 Image 表的部分字段(只显示部分字段)
+
+```php
+// api/model/v1/Image.php
+protected $visible = ['url'];
+```
+
+4.补充说明：
+
+对于复杂的业务处理，应该将相应的代码写到Service层(Model层之上) -- 特别是涉及到多个模型之间的关联的时候
+
 ### 8-14 开启路由完整匹配
 
 ### 8-16 数据库字段冗余的合理利用\*\*
