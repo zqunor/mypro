@@ -698,6 +698,61 @@ protected $visible = ['url'];
 
 ### 8-14 开启路由完整匹配
 
-### 8-16 数据库字段冗余的合理利用\*\*
+1.功能需求说明
+
+```info
+点击专题图片进入到专题后需要显示相应的产品图片、
+
+=》获取属于该专题的产品信息
+
+（一个产品可以属于一个专题，也可以属于多个专题； 一个专题会包含多个产品） ==》多对多关系[Theme <=> Product]
+
+多对多关系的数据表有一个中间关联表
+```
+
+2.模型关联获取关联的数据
+
+```php
+// api/model/Theme.php
+public function products()
+{
+    // 参数1： 对应数据表的模型名
+    // 参数2： 关联表的模型名
+    // 参数3： 关联表中的外键名(和参数1模型关联)
+    // 参数4： 关联表的外键(关联当前模型)
+    return $this->belongsToMany('Product', 'theme_product', 'product_id'. 'theme_id');
+}
+```
+
+3.编写控制器方法(定义方法名和需要接收的参数)
+
+```php
+// api/v1/controller/Theme.php
+public function getProducts($id)
+{
+}
+```
+
+4.定义路由
+
+```php
+Route::get('api/:version/theme/:id', 'api/:version.Theme/getProducts/:id');
+```
+
+【注意】：
+
+默认情况下TP5的配置项是关闭路由完整匹配的，这种情况下访问当前路由接口时，由于先匹配到`api/:version/theme`路由，便不会再继续向下匹配路由，从而会调用该路由对应的接口。
+
+==》**解决办法**：`开启路由完整匹配`
+
+```php
+// application/config.php默认配置文件路径
+// 路由使用完整匹配（设置为true时开启）
+'route_complete_match'   => false,  // =>true
+ ```
+
+
+
+### 8-16 数据库字段冗余的合理利用
 
 多对多关系的数据表关联查询时会自动多一个`pivot`字段的信息，存储关联字段

@@ -35,7 +35,7 @@ class Theme extends Controller
 
         $res = ThemeModel::getProductsByThemeId($id);
 
-        return $res;
+        return json($res);
 
     }
 }
