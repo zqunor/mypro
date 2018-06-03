@@ -694,7 +694,7 @@ protected $visible = ['url'];
 
 4.补充说明：
 
-对于复杂的业务处理，应该将相应的代码写到Service层(Model层之上) -- 特别是涉及到多个模型之间的关联的时候
+对于复杂的业务处理，应该将相应的代码写到 Service 层(Model 层之上) -- 特别是涉及到多个模型之间的关联的时候
 
 ### 8-14 开启路由完整匹配
 
@@ -728,9 +728,7 @@ public function products()
 
 ```php
 // api/v1/controller/Theme.php
-public function getProducts($id)
-{
-}
+public function getProducts($id){}
 ```
 
 4.定义路由
@@ -741,7 +739,7 @@ Route::get('api/:version/theme/:id', 'api/:version.Theme/getProducts/:id');
 
 【注意】：
 
-默认情况下TP5的配置项是关闭路由完整匹配的，这种情况下访问当前路由接口时，由于先匹配到`api/:version/theme`路由，便不会再继续向下匹配路由，从而会调用该路由对应的接口。
+默认情况下 TP5 的配置项是关闭路由完整匹配的，这种情况下访问当前路由接口时，由于先匹配到`api/:version/theme`路由，便不会再继续向下匹配路由，从而会调用该路由对应的接口。
 
 ==》**解决办法**：`开启路由完整匹配`
 
@@ -749,9 +747,55 @@ Route::get('api/:version/theme/:id', 'api/:version.Theme/getProducts/:id');
 // application/config.php默认配置文件路径
 // 路由使用完整匹配（设置为true时开启）
 'route_complete_match'   => false,  // =>true
- ```
+```
 
+### 8-15 完成 Theme 详情接口
 
+1.参数校验
+
+```php
+// api/v1/controller/Theme.php
+(new IDMustPositiveInt)->check();
+```
+
+2.在模型中编写方法实现数据获取
+
+```php
+// api/model/Theme.php
+public function getThemeWithProducts($id)
+{
+    $theme = self::with('products,topicImg,headImg')->find($id);
+    return $theme;
+}
+```
+
+【注】REST是面向资源的请求方式，即将相关的数据全部返回给客户端，不管客户端目前需不需要用得上，但这种方式返回的资源应该有一个限度，
+
+3.在控制器中调用
+
+```php
+// api/v1/controller/Theme.php
+$theme = model('theme')->getThemeWithProducts($id);
+if(!$theme) {
+    throw new ThemeMissException();
+}
+return $theme;
+```
+
+4.编写异常处理类
+
+```php
+// api/lib/exception/ThemeMissException.php
+class ThemeMissException extends BaseException
+{
+    /**
+     * 覆盖父类的相应属性
+     */
+    public $code = 404;
+    public $msg = '请求的主题不存在';
+    public $errorCode = 30000;
+}
+```
 
 ### 8-16 数据库字段冗余的合理利用
 

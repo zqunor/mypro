@@ -33,7 +33,7 @@ class Theme extends Controller
     {
         (new IDMustPositiveInt())->goCheck();
 
-        $res = ThemeModel::getProductsByThemeId($id);
+        $res = model('theme')->getThemeWithProducts($id);
 
         return json($res);
 
