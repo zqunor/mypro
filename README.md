@@ -804,3 +804,28 @@ class ThemeMissException extends BaseException
 `products`中`main_img_url`和`img_id`都是用来关联image表，记录图片信息。属于数据冗余。
 
 但此处是数据冗余的合理应用范围，因为需要在多处使用到，并且数据量和业务并不是太复杂。
+
+### 8-17 REST的合理利用
+
+1.数据冗余之后对数据的完整性和一致性的维护变得困难。
+
+2.数据更新时需要对多处数据进行修改，否则就会出现数据不一致的现象。
+
+3.完成方法编写(对product相关字段的url进行处理---添加前缀)
+
+```php
+// api/model/Product.php
+public function getMainImgUrlAttr($value, $data)
+{
+    return $this->prefixImgUrl($value, $data);
+}
+}
+```
+
+4.REST设计原则
+
+(1)REST是基于资源的，凡是和业务相关的数据都应该返回，不管当前的业务是否需要使用相应的数据。
+
+好处在于后期业务变更需要相应的数据的时候，可以直接调用即可，不用更改服务器的接口程序，可以用来保证客户端的稳定性。
+
+(2)但也不能一味的将所有相关的数据返回，会消耗数据库的性能。
