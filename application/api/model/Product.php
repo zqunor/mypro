@@ -12,4 +12,10 @@ class Product extends BaseModel
     {
         return $this->prefixImgUrl($value, $data);
     }
+
+    public function getMostRecent($count)
+    {
+        $products = self::limit($count)->order('create_time desc')->select();
+        return $products;
+    }
 }

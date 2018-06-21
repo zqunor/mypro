@@ -11,7 +11,6 @@ class IDCollection extends BaseValidate
         'ids' => 'ids必须是以逗号隔开的多个正整数'
     ];
 
-    // $values = id1,id2,...
     /**
      * 验证ids
      * @param string $values = id1,id2,id3,...
