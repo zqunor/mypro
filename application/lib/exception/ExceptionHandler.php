@@ -22,7 +22,7 @@ class ExceptionHandler extends Handle
             $this->errorCode = $e->errorCode;
         } else {
             // 服务器自身异常（代码错误，调用  外部接口错误），记录到日志，不向客户端返回具体问题
-            
+
             // 客户端开发人员不需要错误信息（json结构体即可），服务器开发人员需要错误信息进行调试
             // 通过配置项判断当前需要的错误提示
             // 配置文件不考虑写入，记录某些值时应记录到数据库或redis等
@@ -40,7 +40,7 @@ class ExceptionHandler extends Handle
         $request = Request::instance();
         $result = [
             'msg' => $this->msg,
-            'error_code' => $this->errorCode,  
+            'error_code' => $this->errorCode,
             'request_url' => $request->url()
         ];
         return  json($result, $this->code);
@@ -64,4 +64,4 @@ class ExceptionHandler extends Handle
     // HttpException => \RuntimeException =>  \Exception =>  Throwable
 
     // 当访问的控制器不存在时，
-}  
+}

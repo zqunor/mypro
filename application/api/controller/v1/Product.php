@@ -12,9 +12,10 @@ class Product extends Controller
     {
         (new Count())->goCheck();
         $products = model('product')->getMostRecent($count);
-        if ($products) {
+        if (!$products) {
             throw new ProductMissException();
         }
+
         return $products;
     }
 }

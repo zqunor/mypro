@@ -12,7 +12,7 @@
 
 2.**补充**：PHPStrom 快捷键：
 
-* ctrl+alt+O => 快速删除没有 use 的类
+- ctrl+alt+O => 快速删除没有 use 的类
 
 ### 7.3 TP5 数据库中间层架构解析
 
@@ -22,13 +22,13 @@
 
 1、为什么不使用原生的查询语句而使用查询构造器？
 
-* 简洁方便
-* 对不同数据库的操作进行了封装，使用统一的数据库操作标准
+- 简洁方便
+- 对不同数据库的操作进行了封装，使用统一的数据库操作标准
 
 2、对查询构造器的理解
 
-* 查询构造器不仅仅是对数据库进行读操作，还包括数据库的写操作
-* 查询构造器仅仅是语法，最终都是通过 Builder 翻译成 SQL 语句来执行
+- 查询构造器不仅仅是对数据库进行读操作，还包括数据库的写操作
+- 查询构造器仅仅是语法，最终都是通过 Builder 翻译成 SQL 语句来执行
 
 ### 7.5 查询构造器二
 
@@ -36,20 +36,20 @@
 
 2.链式方法：
 
-* where
-* whereOr
-* field
-* ...
+- where
+- whereOr
+- field
+- ...
 
 只会返回 Query 对象，不是查询结果
 
 3.执行方法：
 
-* find
-* select
-* update
-* delete
-* insert
+- find
+- select
+- update
+- delete
+- insert
 
   4.**在执行方法调用前，查询状态是保留的，直到调用执行方法后，状态才会被清除**
 
@@ -61,11 +61,11 @@
 
 2.三种实现方式：
 
-* 表达式
+- 表达式
 
-* 数组法（不够灵活，且存在一定的安全问题）
+- 数组法（不够灵活，且存在一定的安全问题）
 
-* 闭包（最灵活）
+- 闭包（最灵活）
 
 ```php
 // 通过use来使用外部的数据
@@ -139,15 +139,15 @@ $banner = BannerModel::get($id);
 
 ### 8-1 Banner 相关表分析（数据表关系分析）
 
-* banner 位的数据表`banner`
+- banner 位的数据表`banner`
 
 `banner(id, name, description, delete_time, update_time)`
 
-* 每个 banner 位图片的数据表`banner_item`
+- 每个 banner 位图片的数据表`banner_item`
 
 `banner_item(id, img_id, key_word, type, delete_time, banner_id, update_time)`
 
-* 图片表`image`
+- 图片表`image`
 
 `image(id, url, from, delete_time, update_time)`
 
@@ -220,7 +220,7 @@ $banner = BannerModel::with('items')->find($id);
 
 4.具体实现：
 
-* `model/BannerItem.php`
+- `model/BannerItem.php`
 
 ```php
 public function img()
@@ -233,7 +233,7 @@ public function img()
 
 也可以在`model/Image.php`中定义,实现的效果是一样的。
 
-* `controller/Banner.php`
+- `controller/Banner.php`
 
 ```php
 // 多层嵌套的使用
@@ -273,20 +273,20 @@ $banner = BannerModel::with(['items', 'items.img'])->find($id);
 
 ### 8-4 隐藏模型字段
 
-* 方法 1：将对象转化为数组`toArray()`，再将该字段 unset
+- 方法 1：将对象转化为数组`toArray()`，再将该字段 unset
 
 ```php
 $banner = $banner->toArray();
 unset($banner['delete_time']);
 ```
 
-* 方法 2：使用对象的 `hidden()` 方法
+- 方法 2：使用对象的 `hidden()` 方法
 
 ```php
 $banner->hidden(['update_time', 'delete_time']);
 ```
 
-* 方法 3：只显示指定字段`visible()`
+- 方法 3：只显示指定字段`visible()`
 
 ```php
 $banner->visible(['id', 'name']);
@@ -298,7 +298,7 @@ $banner->visible(['id', 'name']);
 
 最好的办法：在相应的模型类中定义相应的属性。
 
-* 想要隐藏 `banner` 的字段信息
+- 想要隐藏 `banner` 的字段信息
 
 ```php
 // model/Banner.php
@@ -308,14 +308,14 @@ protected $hidden = ['id'];
 protected $visibale = ['name','update_time'];
 ```
 
-* 想要隐藏 `banner.items` 下的字段信息：
+- 想要隐藏 `banner.items` 下的字段信息：
 
 ```php
 // model/BannerItem.php
 protected $hidden = ['id'];
 ```
 
-* 想要隐藏 `banner.items.img` 的字段信息
+- 想要隐藏 `banner.items.img` 的字段信息
 
 ```php
 // model/Image.php
@@ -368,9 +368,9 @@ define('CONF_PATH', __DIR__ . '/../config/');
 
 2.读取器的特性：
 
-* 模型具有的性质
-* 使用模型时自动调用的方法（访问该属性时调用）
-* AOP 思想的一个实现
+- 模型具有的性质
+- 使用模型时自动调用的方法（访问该属性时调用）
+- AOP 思想的一个实现
 
   3.接收器参数说明：
 
@@ -467,7 +467,7 @@ public function getUrlAttr($value, $data)
 
 2.如何实现多版本？
 
-* 目录设置:
+- 目录设置:
 
 ```info
 application
@@ -479,7 +479,7 @@ application
                 |__ Banner.php
 ```
 
-* 路由设置：
+- 路由设置：
 
 ```php
 // 动态参数 :version 动态访问相应版本
@@ -488,19 +488,19 @@ Route::get('api/:version/banner/:id', 'api/:version.Banner/getBanner');
 
 ### 8-10 专题接口模型分析
 
-* theme 专题表
+- theme 专题表
   `theme(id,name,description,topic_img_id,delete_time,head_img_id,update_time)`
 
       `topic_img_id` 首页主题入口的img图片
       `head_img_id` 进入相应主题显示的head图片
 
-* product 产品表
+- product 产品表
   `product(id,name,price,stock,delete_time,category_id,main_img_url,from,create_time,update_time,summary,img_id)`
 
       `main_img_url`
       `img_id`
 
-* theme_product 专题-产品关联表
+- theme_product 专题-产品关联表
   `theme_product(theme_id,product_id)`
 
       theme <=> product 多对多关系
@@ -769,7 +769,7 @@ public function getThemeWithProducts($id)
 }
 ```
 
-【注】REST是面向资源的请求方式，即将相关的数据全部返回给客户端，不管客户端目前需不需要用得上，但这种方式返回的资源应该有一个限度，
+【注】REST 是面向资源的请求方式，即将相关的数据全部返回给客户端，不管客户端目前需不需要用得上，但这种方式返回的资源应该有一个限度，
 
 3.在控制器中调用
 
@@ -801,17 +801,17 @@ class ThemeMissException extends BaseException
 
 多对多关系的数据表关联查询时会自动多一个`pivot`字段的信息，存储关联字段。但关联信息不是我们需要显示的信息，所以将该字段隐藏掉。
 
-`products`中`main_img_url`和`img_id`都是用来关联image表，记录图片信息。属于数据冗余。
+`products`中`main_img_url`和`img_id`都是用来关联 image 表，记录图片信息。属于数据冗余。
 
 但此处是数据冗余的合理应用范围，因为需要在多处使用到，并且数据量和业务并不是太复杂。
 
-### 8-17 REST的合理利用
+### 8-17 REST 的合理利用
 
 1.数据冗余之后对数据的完整性和一致性的维护变得困难。
 
 2.数据更新时需要对多处数据进行修改，否则就会出现数据不一致的现象。
 
-3.完成方法编写(对product相关字段的url进行处理---添加前缀)
+3.完成方法编写(对 product 相关字段的 url 进行处理---添加前缀)
 
 ```php
 // api/model/Product.php
@@ -822,12 +822,86 @@ public function getMainImgUrlAttr($value, $data)
 }
 ```
 
-4.REST设计原则
+4.REST 设计原则
 
-(1)REST是基于资源的，凡是和业务相关的数据都应该返回，不管当前的业务是否需要使用相应的数据。
+(1)REST 是基于资源的，凡是和业务相关的数据都应该返回，不管当前的业务是否需要使用相应的数据。
 
 好处在于后期业务变更需要相应的数据的时候，可以直接调用即可，不用更改服务器的接口程序，可以用来保证客户端的稳定性。
 
 (2)但也不能一味的将所有相关的数据返回，会消耗数据库的性能。
 
 ### 8-18 最近新品接口编写
+
+1.TP5 框架自带时间更新操作,使用模型操作数据库时，当插入记录时，自动带上`create_time`; 更新操作时自动带上`updated_time`;删除时自动带上`delete_time`
+
+2.删除操作不是真实的物理删除，而是通过判断`delete_time`的值来确定该条记录的状态
+
+3.实现步骤
+
+(1)定义控制器方法 [方法名|传递参数]
+
+```php
+public function getRecent($count=15){}
+```
+
+(2)定义路由
+
+```php
+Route::get('api/:version/product/recent', 'api/:version.Product/getRecent');
+```
+
+(3)定义模型方法
+
+- limit()方法的使用
+
+```php
+public function getMostRecent($count)
+{
+    $products = self::limit($count)->order('create_time desc')->select();
+    return $products;
+}
+```
+
+(4)编写验证器
+
+```php
+//需要对传递的count值进行验证
+// application/validate/Count.php
+protected $rule = [
+    'count' => 'isPositiveInteger|between:1,15'
+];
+```
+
+(5)完成控制器方法
+
+```php
+public function getRecent($count=15)
+{
+    (new Count())->goCheck();
+    $products = model('product')->getMostRecent($count);
+    if ($products) {
+        throw new ProductMissException();
+    }
+    return $products;
+}
+```
+
+(6)完成异常处理类方法
+
+```php
+class ProductMissException extends BaseException
+{
+    public $code = '404';
+    public $msg = '请求的product不存在';
+    public $errorCode = 20000;
+
+}
+```
+
+[注]：`app_debug`设置为 true 时，在`ExceptionHandler.php`中会调用父类的`render()`方法，导致框架的异常处理类找不到程序中自定义的异常处理类，从而会有报错提示。
+
+!!!出现 500 系统内部错误!
+
+- 原因=>config.php 设置`default_return_type`的值为`html`, 而 Product 的 controller 中 return 的结果值为 array，导致系统内部错误。
+
+- 解决=>将`default_return_type`的值为`json`。或者将 Product 的 controller 中 return 的结果进行 json 格式化。
