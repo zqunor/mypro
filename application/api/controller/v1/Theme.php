@@ -23,7 +23,7 @@ class Theme extends Controller
         $ids = explode(',', $ids);
         $theme = model('theme')->with(['topicImg', 'headImg'])->select($ids);
 
-        if (!$theme) {
+        if ($theme->isEmpty()) {
             throw new ThemeMissException();
         }
 

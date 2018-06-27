@@ -905,3 +905,42 @@ class ProductMissException extends BaseException
 - 原因=>config.php 设置`default_return_type`的值为`html`, 而 Product 的 controller 中 return 的结果值为 array，导致系统内部错误。
 
 - 解决=>将`default_return_type`的值为`json`。或者将 Product 的 controller 中 return 的结果进行 json 格式化。
+
+#### **【警告】学会查看 log 日志信息，提高错误排查能力！**
+
+### 8-19 使用数据集还是数组？
+
+1.问题1：验证方法中，`$rule`属性数组的键值对中， 值`'isPositiveInteger|between:1,15'`中`|`符两端不能有空格，否则会被视为验证错误。
+
+2.问题2：对某些当前不需要用到，但后期会用到的字段信息（特殊情况不用，大多数情况要用），既不能直接显示，也不能直接隐藏，如何处理？
+
+=》 在`api/v1/Product/recent`接口中临时隐藏`summary`字段。
+
+3.**collection()方法**：临时隐藏某个或某些字段
+
+【使用方法】：
+
+```php
+// 使用数据集，临时隐藏某些字段
+$productCollection = collection($products);
+$products = $productCollection->hidden(['summary']);
+```
+
+4.一个product是一个对象，一组product也可是是一个对象(数据集)。
+
+5.使用对象的方式，可读性好，内聚性好。
+
+6.TP5调用模型自动返回一个数据集的形式：`resultset_type` [database.php]
+
+默认是`array`，设置成`collection`后，模型返回的数据自动就是`collection`形式，不需要再转换一次。
+
+```php
+// 在database.php中配置之后，不需要手动转换为collection
+$products = $products->hidden(['summary']);
+```
+
+【扩展】：
+
+但是这样使用之后，控制器中调用模型返回数据后，返回的是对象，即使没有数据，也不是空，所以直接使用`!`判断是不能实现效果的。
+
+=》解决方法：使用数据集对象的`isEmpty()`方法进行判空。
