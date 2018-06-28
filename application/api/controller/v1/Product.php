@@ -17,9 +17,6 @@ class Product extends Controller
             throw new ProductMissException();
         }
 
-        // 在database.php中配置之后，不需要手动转换为collection
-        // $productCollection = collection($products);
-        // $products = $productCollection->hidden(['summary']);
         $products = $products->hidden(['summary']);
         return $products;
     }

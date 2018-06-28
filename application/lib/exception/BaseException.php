@@ -25,9 +25,6 @@ class BaseException extends Exception
     {
         if(!is_array($params)) {
             return ;
-            // throw new Exception('参数必须是数组');
-
-            // 两种处理结果均可，可根据自己的情况选择。
         }
 
         if(array_key_exists('msg', $params)){
