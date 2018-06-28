@@ -910,9 +910,9 @@ class ProductMissException extends BaseException
 
 ### 8-19 使用数据集还是数组？
 
-1.问题1：验证方法中，`$rule`属性数组的键值对中， 值`'isPositiveInteger|between:1,15'`中`|`符两端不能有空格，否则会被视为验证错误。
+1.问题 1：验证方法中，`$rule`属性数组的键值对中， 值`'isPositiveInteger|between:1,15'`中`|`符两端不能有空格，否则会被视为验证错误。
 
-2.问题2：对某些当前不需要用到，但后期会用到的字段信息（特殊情况不用，大多数情况要用），既不能直接显示，也不能直接隐藏，如何处理？
+2.问题 2：对某些当前不需要用到，但后期会用到的字段信息（特殊情况不用，大多数情况要用），既不能直接显示，也不能直接隐藏，如何处理？
 
 =》 在`api/v1/Product/recent`接口中临时隐藏`summary`字段。
 
@@ -926,11 +926,11 @@ $productCollection = collection($products);
 $products = $productCollection->hidden(['summary']);
 ```
 
-4.一个product是一个对象，一组product也可是是一个对象(数据集)。
+4.一个 product 是一个对象，一组 product 也可是是一个对象(数据集)。
 
 5.使用对象的方式，可读性好，内聚性好。
 
-6.TP5调用模型自动返回一个数据集的形式：`resultset_type` [database.php]
+6.TP5 调用模型自动返回一个数据集的形式：`resultset_type` [database.php]
 
 默认是`array`，设置成`collection`后，模型返回的数据自动就是`collection`形式，不需要再转换一次。
 
@@ -944,3 +944,27 @@ $products = $products->hidden(['summary']);
 但是这样使用之后，控制器中调用模型返回数据后，返回的是对象，即使没有数据，也不是空，所以直接使用`!`判断是不能实现效果的。
 
 =》解决方法：使用数据集对象的`isEmpty()`方法进行判空。
+
+### 8-20 分类列表接口
+
+1.模型类的`all`方法使用。
+
+- 参数 1：主键列表或者查询条件（闭包） `mixed`
+
+- 参数 2：关联预查询 `array | string`
+
+```php
+$categories = model('Category')->with('img')->select();
+// 等价于
+$categories = model('Category')->all([], 'img');
+```
+
+### 8-21 扩展：接口粒度与接口分层
+
+1.减少首页http请求(api)的次数，从而减轻服务器的压力
+
+2.接口粒度： 太粗=》代码复用性不好，不够灵活；太细=》需要发送的请求太多，不方便
+
+3.架构师 =》 Api接口设计 =》 底层设计力度比较小、灵活性比较高的api接口；越往上粒度逐渐变粗。
+
+4.如果确实调用的接口比较多，应该在api基础数据层上建立业务层，再在业务层调用基础数据层相关的接口，再进行封装。

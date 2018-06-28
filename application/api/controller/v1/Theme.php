@@ -4,7 +4,6 @@ namespace app\api\controller\v1;
 
 use app\api\validate\IDCollection;
 use think\Controller;
-use app\api\model\Theme as ThemeModel;
 use app\api\validate\IDMustPositiveInt;
 use app\lib\exception\ThemeMissException;
 
