@@ -995,8 +995,387 @@ $categories = model('Category')->all([], 'img');
 
 1.微信身份登录体系
 
-![](https:raw.githubusercontent.com/zqunor/MarkdownPic/master/thinkphp5+小程序商城/9-2微信登录流程.png)
+![微信登录流程](https:raw.githubusercontent.com/zqunor/MarkdownPic/master/thinkphp5+小程序商城/9-2微信登录流程.png)
 
 2.Token 在接口验证时的使用流程
 
-![](https:raw.githubusercontent.com/zqunor/MarkdownPic/master/thinkphp5+小程序商城/9-2使用Token访问下单接口.png)
+![Token访问下单接口](https:raw.githubusercontent.com/zqunor/MarkdownPic/master/thinkphp5+小程序商城/9-2使用Token访问下单接口.png)
+
+### 9-3 实现 Token 身份权限体系
+
+1.获取 token 的请求使用 post 方法[安全性方面考虑]
+
+2.将复杂的业务分层到`service`层[实现分层思想]
+
+使用模型处理数据库CRUD相关的操作，对于不操作数据库的复杂业务，将其封装到Service目录下，实现分层处理的思想，Service层是在Model层之上的业务层。
+
+
+3.基础实现
+
+1）控制器的定义
+
+```php
+// api/controller/v1/Token [注意命名空间]
+public function getToken($code = '') {}
+```
+
+2）路由定义
+
+```php
+// route.php
+Route::post('api/:version/token/user', 'api/:version.Token/getToken');
+```
+
+3）验证器校验
+
+```php
+// api/controller/v1/Token 
+(new TokenGet())->goCheck();
+```
+
+```php
+// api/validate/TokenGet
+protected $rule = [
+    // 在验证器基类中定义isNotEmpty()方法
+    'code' => 'require|isNotEmpty'
+];
+
+protected $message = [
+    'code' => 'code必填！'
+];
+```
+
+### 9-4/5/6/7 实现 Token 身份权限体系
+
+1.获取微信生成的code码，并将其作为参数，传递给微信接口来获得openid和access_token等相关信息[openid/session_key]
+
+```php
+// api/controller/v1/Token 
+$userToken = new UserToken($code);
+$token = $userToken->get();
+```
+
+**2.封装Service层，实现Token令牌的获取**[重点]
+
+1） 配置微信小程序相关参数[app_id app_secret login_url]
+
+2.1.1 在配置文件中设置微信小程序的相关参数
+
+```php
+// config/extra/wx.php
+return [
+    'app_id' => 'XXXXXXXXX',
+    'app_secret' => 'XXXXXXXXX',
+    'login_url' => "https://api.weixin.qq.com/sns/jscode2session?" . "appid=%s&secret=%s&js_code=%s&grant_type=authorization_code"
+];
+```
+
+2.1.2 创建Service层的UserToken处理类，定义参数为私有属性
+
+```php
+// api/service/UserToken.php
+namespace app\api\service;
+
+use app\lib\exception\WechatException;
+use app\lib\exception\TokenException;
+
+class UserToken extends Token
+{
+    protected $code;
+    protected $appid;
+    protected $appSecret;
+    protected $loginUrl;
+}
+```
+
+
+2） 拼接参数，并使用curl模拟http请求微信服务器，并获取返回结果
+
+```php
+// api/service/UserToken.php
+public function __construct($code)
+{
+    $this->code      = $code;
+    $this->appid     = config('wx.app_id');
+    $this->appSecret = config('wx.app_secret');
+    $this->loginUrl  = sprintf(
+        config('wx.login_url'),
+        $this->appid, $this->appSecret, $this->code
+    );
+}
+    
+public function get()
+{
+    $result = curl_get($this->loginUrl);
+}
+```
+
+在公共方法文件中定义curl模拟http请求的方法：
+
+```php
+// application/common.php
+function curl_get($url, &$httpCode = 0)
+{
+    //1、初始化curl
+    $curl = curl_init();
+
+    //2、告诉curl,请求的地址
+    curl_setopt($curl, CURLOPT_URL, $url);
+    //3、将请求的数据返回，而不是直接输出
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+
+    $fileContents = curl_exec($curl); // 执行操作
+    curl_close($curl); // 关键CURL会话
+
+    return $fileContents; // 返回数据
+}
+```
+
+3） 请求微信接口失败[微信内部错误/程序编写出错]的异常处理
+
+```php
+// api/service/UserToken.php get()
+$wxResult = json_decode($result, true);
+
+if (empty($wxResult)) {
+    // 经验总结得：如果返回的结果为空[没有返回错误信息和错误代码]，则是微信服务器接口的问题，直接抛出异常一颗
+    throw new \Exception('获取session_key及openID异常，微信内部错误');
+} else {
+    $loginFail = isset($wxResult['errcode']);
+    // 程序传递的参数出错时，微信服务器会返回错误码和错误提示信息
+    if ($loginFail) {
+        $this->processLoginErr($wxResult);
+    } 
+}
+```
+
+调用微信Token请求接口调用出错时的处理：
+
+```php
+// api/service/UserToken.php
+private function processLoginErr($wxResult)
+{
+    throw new WechatException(
+        [
+            'msg'       => $wxResult['errmsg'],
+            'errorCode' => $wxResult['errcode'],
+        ]
+    );
+}
+```
+
+4） **成功获取微信接口返回数据后的操作[存储openid、生成令牌、写入缓存、返回令牌]**
+
+```php
+// api/service/UserToken.php get()
+return $this->grantToken($wxResult);
+```
+
+2.4.1 存储openid
+
+```php
+// api/service/UserToken.php
+private function grantToken($wxResult)
+{
+    $now = time();
+    // 1.拿到openid
+    $openid     = $wxResult['openid'];
+    // $sessionKey = $wxResult['session_key'];
+
+    // 2.查看数据库中该openid的记录是否已经存在[同一个用户的openid始终保持不变]
+    $user = model('user')->getByOpenId($openid);
+
+    // 3.如果存在，则不处理； 如果不存在，那么新增一条user记录
+    if ($user) {
+        $uid = $user->id;
+    } else {
+        $uid = $this->newUser($openid);
+    }
+}
+```
+
+根据openid查询是否已经存在该用户
+
+```php
+// api/model/User.php
+public static function getByOpenId($openid)
+{
+    $user = self::where('openid', '=', $openid)->find();
+
+    return $user;
+}
+```
+
+创建用户
+
+```php
+// api/service/UserToken.php
+private function newUser($openid)
+{
+    $user = model('user')->create([
+       'openid' => $openid
+    ]);
+
+    return $user->id;
+}
+```
+
+2.4.2 准备缓存数据(缓存的值)[微信返回数据(openid|session_key) + uid(用户服务器中保存的用户记录id) + scope(用户权限，值越大，权限越高) ]
+
+```php
+// api/service/UserToken.php  grantToken()
+// 4.生成令牌，准备缓存数据，写入缓存 [获取用户的相关信息]
+// 4.1 准备缓存数据
+$cachedValue = $this->prepareCachedValue($wxResult, $uid);
+```
+
+准备缓存数据值的方法[缓存的值]
+```php
+// api/service/UserToken.php
+private function prepareCachedValue($wxResult, $uid)
+{
+    $cachedValue = $wxResult;
+    $cachedValue['uid'] = $uid;
+    $cachedValue['scope'] = 16; // 数值越大，权限越多
+
+    return $cachedValue;
+}
+```
+
+2.4.3 写入缓存[令牌+微信返回数据+有效期]
+
+```php
+// api/service/UserToken.php  grantToken()
+// 4.2 写入缓存，并返回令牌
+$token = $this->saveToCache($cachedValue);
+```
+
+2.4.3.1 生成令牌(缓存的键)[随机字符串+时间戳+盐]
+
+```php
+// 令牌是用户程序生成的随机字符串，与微信服务器无关
+// api/service/UserToken.php  saveToCache()
+$key = self::generateToken();
+```
+
+在服务器层构建Token基类，处理用户登录Token和后续的其他Token信息[service下UserToken继承该基类]
+
+```php
+// api/service/Token.php
+public static function generateToken()
+{
+    // 用三组字符串，进行md5加密 [加强安全性]
+    // 1.32个字符组成一组随机字符串
+    $randChars = getRandChar(32);
+    // 2.时间戳
+    $timestamp = $_SERVER['REQUEST_TIME_FLOAT'];
+    // 3.盐
+    $salt = config('secure.token_salt');
+
+    return md5($randChars.$timestamp.$salt);
+}
+```
+
+公共方法中定义生成指定长度的随机字符串
+
+```php
+// application/common.php
+function getRandChar($length)
+{
+    $str    = null;
+    $strPol = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    $max    = strlen($strPol) - 1;
+
+    for ($i = 0; $i < $length; $i++) {
+        $str .= $strPol[rand(0, $max)];
+    }
+
+    return $str;
+}
+```
+
+
+创建安全配置文件[盐：随机字符串]
+
+```php
+// extra/secure.php
+return [
+    'token_salt' => 'E7epHZhrTfgQ'
+];
+```
+
+2.4.3.2 配置文件中设置cache缓存的有效期
+
+```php
+
+创建安全配置文件[盐：随机字符串]
+
+```php
+// extra/setting.php
+'token_expire_in' => 7200
+```
+
+2.4.3.3 创建缓存文件
+
+```php
+private function saveToCache($cachedValue)
+{
+    $key = self::generateToken();
+    $value = json_encode($cachedValue);
+    // 设置缓存失效时间
+    $expire_in = config('setting.token_expire_in');
+
+    $request = cache($key, $value, $expire_in);
+    if (!$request) {
+        // 令牌缓存出错
+        throw new TokenException([
+            'msg' => '服务器缓存异常',
+            'errorCode' => 10005
+        ]);
+    }
+
+    return $key;
+}
+```
+
+2.4.4 返回令牌
+
+```php
+// api/service/UserToken.php  grantToken()
+// 4.3 写入缓存，并返回令牌
+return $token;
+```
+
+3.异常处理类
+
+3.1 微信内部错误[直接抛出异常]
+
+3.2 微信接口调用出错[微信相关异常处理类WechatException]
+
+```php
+class WechatException extends BaseException
+{
+    public $code = 404;
+    public $msg = '微信服务器接口调用失败';
+    public $errorCode = 999;
+}
+```
+
+3.3 缓存Token出错[Token异常处理类TokenException]
+
+```php
+class TokenException extends BaseException
+{
+    public $code = 401;
+    public $msg = 'Token已过期或无效Token';
+    public $errorCode = 10001;
+}
+```
+
+4.补充：关于请求参数code的获取[借助微信开发工具]
+
+
+
