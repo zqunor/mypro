@@ -1456,3 +1456,25 @@ export {Token};
 
 (2) 如果没有输出code, 需要关闭开发者工具后再重新启动，会自动调用该方法，并输出code
 [调用过生成的token已经被存储到浏览器的Storage中，便不会再调用Token请求接口，从而不产生code]
+
+### 9-9 商品详情接口 
+
+1. 定义控制器方法 getOne($id)
+
+2. 定义路由 api/:version/product/:id
+
+3. 模型类实现[隐藏部分字段、设置数据表关联、实现数据库查询]
+
+        Product => properties => ProductProperty => 商品属性值[品名、口味、产地、保质期]
+        Product => imgs => Image  => 商品主图
+        ProductImage => imgs.imgUrl => Image => 商品详情图
+
+4. 异常处理信息提示
+
+```php
+[
+    'msg'       => '当前产品无详情',
+    'errorCode' => 20001
+]
+```
+   

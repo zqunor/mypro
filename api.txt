@@ -3,5 +3,6 @@ http://mypro.com/api/v1/theme?ids=1,2,3
 http://mypro.com/api/v1/product/recent?count=3
 http://mypro.com/api/v1/category/all
 http://mypro.com/api/v1/product/by_category?id=3
+http://mypro.com/api/v1/product/1
 
 http://mypro.com/api/v1/token/user
