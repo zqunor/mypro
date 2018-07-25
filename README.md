@@ -1375,7 +1375,7 @@ class TokenException extends BaseException
 }
 ```
 
-### 9-8 补充：关于请求参数code的获取[借助微信开发工具]
+### 9-8 获取请求参数code并调用PHP接口[借助微信开发工具]
 
 #### 1.微信开发者工具中配置：
 
@@ -1403,4 +1403,56 @@ wx.login({
 })
 ```
 
-> 【注】：如果没有输出code, 需要关闭开发者工具后再重新启动，会自动调用该方法，并输出code
+#### 3.请求PHP接口获取Token
+
+```javascript
+// 引用使用es6的module引入和定义
+// 全局变量以g_开头
+// 私有函数以_开头
+
+import { Config } from 'config.js';
+
+class Token {
+    constructor() {
+        this.tokenUrl = Config.restUrl + 'token/user';
+    }
+
+    verify() {
+        var token = wx.getStorageSync('token');
+        if (!token) {
+            this.getTokenFromServer();
+        }
+    }
+
+    getTokenFromServer(callBack) {
+        var that  = this;
+        wx.login({
+            success: function (res) {
+              console.log("code: " + res.code);
+                wx.request({
+                    url: that.tokenUrl,
+                    method:'POST',
+                    data:{
+                        code:res.code
+                    },
+                    success:function(res){
+                        console.log("token： " + res.data.token);
+                        wx.setStorageSync('token', res.data.token);
+                        callBack&&callBack(res.data.token);
+                    }
+                })
+            }
+        })
+    }
+}
+
+export {Token};
+```
+
+**【补充说明】**：
+
+(1) 需要调试时，将XDEBUG参数拼接到`this.tokenUrl`即可
+
+
+(2) 如果没有输出code, 需要关闭开发者工具后再重新启动，会自动调用该方法，并输出code
+[调用过生成的token已经被存储到浏览器的Storage中，便不会再调用Token请求接口，从而不产生code]
