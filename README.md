@@ -1383,9 +1383,18 @@ class TokenException extends BaseException
 
 （2）小程序代码：
 
-    在小程序登录调用wx.login()方法中输出code，然后使用接口请求工具将code作为post请求的参数，进行调用
+- 在config中定义restUrl
 
 ```javascript
+// Protoss/utils/config.js [设置本地测试的域名基地址]
+Config.restUrl = 'http://mypro.com/api/v1/';
+```
+
+- 在登录方法中获取code
+
+```javascript
+// 在小程序登录调用wx.login()方法中输出code，然后使用接口请求工具将code作为post请求的参数，进行调用
+
 // Protoss/utils/token.js getTokenFromServer()
 wx.login({
   success: function (res) {
