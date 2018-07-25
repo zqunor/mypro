@@ -1375,22 +1375,22 @@ class TokenException extends BaseException
 }
 ```
 
-4.补充：关于请求参数code的获取[借助微信开发工具]
+### 9-8 补充：关于请求参数code的获取[借助微信开发工具]
 
-（1）微信开发者工具中配置：
+#### 1.微信开发者工具中配置：
 
     设置好app_key后，需要将 “详情” 中的 “不校验合法域名、web-view(业务域名)、TLS版本以及HTTPS证书” 勾选上（在本地测试，没有远程访问的服务器或远程服务器访问的域名没有https证书）
 
-（2）小程序代码：
+#### 2.小程序代码：
 
-- 在config中定义restUrl
+(1) 在config中定义restUrl
 
 ```javascript
 // Protoss/utils/config.js [设置本地测试的域名基地址]
 Config.restUrl = 'http://mypro.com/api/v1/';
 ```
 
-- 在登录方法中获取code
+(2)在登录方法中获取code
 
 ```javascript
 // 在小程序登录调用wx.login()方法中输出code，然后使用接口请求工具将code作为post请求的参数，进行调用
@@ -1403,4 +1403,4 @@ wx.login({
 })
 ```
 
-[关闭开发者工具后再重新启动，会自动调用该方法，并输出code]
+> 【注】：如果没有输出code, 需要关闭开发者工具后再重新启动，会自动调用该方法，并输出code
