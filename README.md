@@ -1477,4 +1477,66 @@ export {Token};
     'errorCode' => 20001
 ]
 ```
-   
+
+### 9-10-1 路由变量规则
+
+1.路由匹配规则在项目中的应用。
+
+```php
+Route::get('api/:version/product/recent', 'api/:version.Product/getRecent');
+Route::get('api/:version/product/:id', 'api/:version.Product/getOne');
+```
+
+2.存在的问题
+
+目前调用接口都不存在问题，但是当将`:id`行放到`recent`行之前后，在调用`recent`路由时，则会因为优先匹配`:id`对应的路由，
+此时则会因为参数校验不通过而报错。
+
+3.解决之道：
+
+对路由匹配规则进行限定，设置变量规则，对于`:id`行，限定只有当参数为数值时才匹配到当前行。即设置 `$id`的变量规则
+
+变量规则：为变量用正则的方式指定变量规则，弥补了动态变量无法限制具体的类型问题，并且支持全局规则设置。
+
+4.代码实现[设置变量规则]
+
+```php
+Route::get('api/:version/product/:id', 'api/:version.Product/getOne', [], ['id'=>'\d+']);
+```
+
+### 9-10-2 路由分组
+
+对路由配置文件中，具有相同路由前缀的路由归为同一路由组，例如：
+
+对于几个对应产品信息的路由，
+```php
+Route::get('api/:version/product/recent', 'api/:version.Product/getRecent');
+Route::get('api/:version/product/by_category', 'api/:version.Product/getAllInCategory');
+Route::get('api/:version/product/:id', 'api/:version.Product/getOne');
+```
+
+可以分组到产品组路由下，
+
+```php
+// 闭包方式注册路由分组
+Route::group('api/:version/product', function() {
+    Route::get('recent', 'api/:version.Product/getRecent');
+    Route::get('by_category', 'api/:version.Product/getAllInCategory');
+    Route::get(':id', 'api/:version.Product/getOne', [], ['id' => '\d+']);
+});
+```
+
+或者：
+
+```php
+// 数组方式注册路由分组
+Route::group('api/:version/product', [
+    'recent' => ['api/:version.Product/getRecent'],
+    'by_category' => ['api/:version.Product/getAllInCategory'],
+    ':id' => ['api/:version.Product/getOne', [], ['id' => '\d+']]
+],['method' => 'get']);
+```
+
+路由分组的方式定义路由，执行的效率会比一般形式高一点。
+
+【注】路由分组的公共路由定义时，不能在末尾加`/`，否则会报控制器不存在的错误
