@@ -1540,3 +1540,74 @@ Route::group('api/:version/product', [
 路由分组的方式定义路由，执行的效率会比一般形式高一点。
 
 【注】路由分组的公共路由定义时，不能在末尾加`/`，否则会报控制器不存在的错误
+
+### 9-11 闭包函数构建查询器
+
+1.完成的商品详情的数据信息格式为：
+
+```info
+{
+"id": 11,
+"name": "贵妃笑 100克",
+"price": "0.01",
+"stock": 994,
+"main_img_url": "http://mypro.com/static/images/product-dryfruit-a@6.png",
+"summary": null,
+"img_id": 39,
+"imgs":[
+    {
+        "id": 4,
+        "order": 1,
+        "img_url":{
+            "url": "http://mypro.com/static/images/detail-1@1-dryfruit.png"
+        }
+    },
+    {
+        "id": 5,
+        "order": 2,
+        "img_url":{
+            "url": "http://mypro.com/static/images/detail-2@1-dryfruit.png"
+        }
+    },
+],
+"properties":[
+    {
+        "id": 1,
+        "name": "品名",
+        "detail": "杨梅"
+    },
+]
+}
+```
+
+
+
+2.问题：其中`imgs`的值为每个商品下的所有图片介绍，所以所有图片之间一定存在一定的顺序，其中`imgs`数组下的数据中存在`order`排序字段，如何对`imgs`的数据通过`order`进行排序？
+
+3.【答】：使用闭包函数构建查询器【相当于拼接sql】。
+
+```php
+$product = self::with([
+        'imgs' => function($query) {
+            $query->with(['imgUrl'])->order('order asc');
+        }
+    ])
+    ->with(['properties'])
+    ->find($id);
+```
+
+4.思路分析：
+
+（1）要对imgs下的数据进行处理，需要获取到每组数据，然后对`order`字段进行排序。【通过闭包函数获取到每组数据】
+
+（2）除了要对每组数据进行按`order`排序，还需要处理`img_url`。【通过with链式操作处理`img_url`】
+
+5.关于闭包函数的理解：
+
+```php
+'imgs' => function($query) {
+    $query->with(['imgUrl'])->order('order asc');
+}
+```
+
+对于数组`imgs`，通过闭包函数，获取到每组数据，其中`$query`即作为参数接收每组数据的值，然后再对每组数据的`img_url`通过with进行数据关联。
