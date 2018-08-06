@@ -1007,8 +1007,7 @@ $categories = model('Category')->all([], 'img');
 
 2.将复杂的业务分层到`service`层[实现分层思想]
 
-使用模型处理数据库CRUD相关的操作，对于不操作数据库的复杂业务，将其封装到Service目录下，实现分层处理的思想，Service层是在Model层之上的业务层。
-
+使用模型处理数据库 CRUD 相关的操作，对于不操作数据库的复杂业务，将其封装到 Service 目录下，实现分层处理的思想，Service 层是在 Model 层之上的业务层。
 
 3.基础实现
 
@@ -1029,7 +1028,7 @@ Route::post('api/:version/token/user', 'api/:version.Token/getToken');
 3）验证器校验
 
 ```php
-// api/controller/v1/Token 
+// api/controller/v1/Token
 (new TokenGet())->goCheck();
 ```
 
@@ -1047,15 +1046,15 @@ protected $message = [
 
 ### 9-4/5/6/7 实现 Token 身份权限体系
 
-1.获取微信生成的code码，并将其作为参数，传递给微信接口来获得openid和access_token等相关信息[openid/session_key]
+1.获取微信生成的 code 码，并将其作为参数，传递给微信接口来获得 openid 和 access_token 等相关信息[openid/session_key]
 
 ```php
-// api/controller/v1/Token 
+// api/controller/v1/Token
 $userToken = new UserToken($code);
 $token = $userToken->get();
 ```
 
-**2.封装Service层，实现Token令牌的获取**[重点]
+**2.封装 Service 层，实现 Token 令牌的获取**[重点]
 
 1） 配置微信小程序相关参数[app_id app_secret login_url]
 
@@ -1070,7 +1069,7 @@ return [
 ];
 ```
 
-2.1.2 创建Service层的UserToken处理类，定义参数为私有属性
+2.1.2 创建 Service 层的 UserToken 处理类，定义参数为私有属性
 
 ```php
 // api/service/UserToken.php
@@ -1088,8 +1087,7 @@ class UserToken extends Token
 }
 ```
 
-
-2） 拼接参数，并使用curl模拟http请求微信服务器，并获取返回结果
+2） 拼接参数，并使用 curl 模拟 http 请求微信服务器，并获取返回结果
 
 ```php
 // api/service/UserToken.php
@@ -1103,14 +1101,14 @@ public function __construct($code)
         $this->appid, $this->appSecret, $this->code
     );
 }
-    
+
 public function get()
 {
     $result = curl_get($this->loginUrl);
 }
 ```
 
-在公共方法文件中定义curl模拟http请求的方法：
+在公共方法文件中定义 curl 模拟 http 请求的方法：
 
 ```php
 // application/common.php
@@ -1148,11 +1146,11 @@ if (empty($wxResult)) {
     // 程序传递的参数出错时，微信服务器会返回错误码和错误提示信息
     if ($loginFail) {
         $this->processLoginErr($wxResult);
-    } 
+    }
 }
 ```
 
-调用微信Token请求接口调用出错时的处理：
+调用微信 Token 请求接口调用出错时的处理：
 
 ```php
 // api/service/UserToken.php
@@ -1167,14 +1165,14 @@ private function processLoginErr($wxResult)
 }
 ```
 
-4） **成功获取微信接口返回数据后的操作[存储openid、生成令牌、写入缓存、返回令牌]**
+4） **成功获取微信接口返回数据后的操作[存储 openid、生成令牌、写入缓存、返回令牌]**
 
 ```php
 // api/service/UserToken.php get()
 return $this->grantToken($wxResult);
 ```
 
-2.4.1 存储openid
+2.4.1 存储 openid
 
 ```php
 // api/service/UserToken.php
@@ -1197,7 +1195,7 @@ private function grantToken($wxResult)
 }
 ```
 
-根据openid查询是否已经存在该用户
+根据 openid 查询是否已经存在该用户
 
 ```php
 // api/model/User.php
@@ -1223,7 +1221,7 @@ private function newUser($openid)
 }
 ```
 
-2.4.2 准备缓存数据(缓存的值)[微信返回数据(openid|session_key) + uid(用户服务器中保存的用户记录id) + scope(用户权限，值越大，权限越高) ]
+2.4.2 准备缓存数据(缓存的值)[微信返回数据(openid|session_key) + uid(用户服务器中保存的用户记录 id) + scope(用户权限，值越大，权限越高) ]
 
 ```php
 // api/service/UserToken.php  grantToken()
@@ -1233,6 +1231,7 @@ $cachedValue = $this->prepareCachedValue($wxResult, $uid);
 ```
 
 准备缓存数据值的方法[缓存的值]
+
 ```php
 // api/service/UserToken.php
 private function prepareCachedValue($wxResult, $uid)
@@ -1261,7 +1260,7 @@ $token = $this->saveToCache($cachedValue);
 $key = self::generateToken();
 ```
 
-在服务器层构建Token基类，处理用户登录Token和后续的其他Token信息[service下UserToken继承该基类]
+在服务器层构建 Token 基类，处理用户登录 Token 和后续的其他 Token 信息[service 下 UserToken 继承该基类]
 
 ```php
 // api/service/Token.php
@@ -1297,7 +1296,6 @@ function getRandChar($length)
 }
 ```
 
-
 创建安全配置文件[盐：随机字符串]
 
 ```php
@@ -1307,16 +1305,15 @@ return [
 ];
 ```
 
-2.4.3.2 配置文件中设置cache缓存的有效期
+2.4.3.2 配置文件中设置 cache 缓存的有效期
 
-```php
-
+````php
 创建安全配置文件[盐：随机字符串]
 
 ```php
 // extra/setting.php
 'token_expire_in' => 7200
-```
+````
 
 2.4.3.3 创建缓存文件
 
@@ -1353,7 +1350,7 @@ return $token;
 
 3.1 微信内部错误[直接抛出异常]
 
-3.2 微信接口调用出错[微信相关异常处理类WechatException]
+3.2 微信接口调用出错[微信相关异常处理类 WechatException]
 
 ```php
 class WechatException extends BaseException
@@ -1364,7 +1361,7 @@ class WechatException extends BaseException
 }
 ```
 
-3.3 缓存Token出错[Token异常处理类TokenException]
+3.3 缓存 Token 出错[Token 异常处理类 TokenException]
 
 ```php
 class TokenException extends BaseException
@@ -1375,7 +1372,7 @@ class TokenException extends BaseException
 }
 ```
 
-### 9-8 获取请求参数code并调用PHP接口[借助微信开发工具]
+### 9-8 获取请求参数 code 并调用 PHP 接口[借助微信开发工具]
 
 #### 1.微信开发者工具中配置：
 
@@ -1383,93 +1380,92 @@ class TokenException extends BaseException
 
 #### 2.小程序代码：
 
-(1) 在config中定义restUrl
+(1) 在 config 中定义 restUrl
 
 ```javascript
 // Protoss/utils/config.js [设置本地测试的域名基地址]
-Config.restUrl = 'http://mypro.com/api/v1/';
+Config.restUrl = "http://mypro.com/api/v1/";
 ```
 
-(2)在登录方法中获取code
+(2)在登录方法中获取 code
 
 ```javascript
 // 在小程序登录调用wx.login()方法中输出code，然后使用接口请求工具将code作为post请求的参数，进行调用
 
 // Protoss/utils/token.js getTokenFromServer()
 wx.login({
-  success: function (res) {
+  success: function(res) {
     console.log("code: " + res.code);
   }
-})
+});
 ```
 
-#### 3.请求PHP接口获取Token
+#### 3.请求 PHP 接口获取 Token
 
 ```javascript
 // 引用使用es6的module引入和定义
 // 全局变量以g_开头
 // 私有函数以_开头
 
-import { Config } from 'config.js';
+import { Config } from "config.js";
 
 class Token {
-    constructor() {
-        this.tokenUrl = Config.restUrl + 'token/user';
-    }
+  constructor() {
+    this.tokenUrl = Config.restUrl + "token/user";
+  }
 
-    verify() {
-        var token = wx.getStorageSync('token');
-        if (!token) {
-            this.getTokenFromServer();
-        }
+  verify() {
+    var token = wx.getStorageSync("token");
+    if (!token) {
+      this.getTokenFromServer();
     }
+  }
 
-    getTokenFromServer(callBack) {
-        var that  = this;
-        wx.login({
-            success: function (res) {
-              console.log("code: " + res.code);
-                wx.request({
-                    url: that.tokenUrl,
-                    method:'POST',
-                    data:{
-                        code:res.code
-                    },
-                    success:function(res){
-                        console.log("token： " + res.data.token);
-                        wx.setStorageSync('token', res.data.token);
-                        callBack&&callBack(res.data.token);
-                    }
-                })
-            }
-        })
-    }
+  getTokenFromServer(callBack) {
+    var that = this;
+    wx.login({
+      success: function(res) {
+        console.log("code: " + res.code);
+        wx.request({
+          url: that.tokenUrl,
+          method: "POST",
+          data: {
+            code: res.code
+          },
+          success: function(res) {
+            console.log("token： " + res.data.token);
+            wx.setStorageSync("token", res.data.token);
+            callBack && callBack(res.data.token);
+          }
+        });
+      }
+    });
+  }
 }
 
-export {Token};
+export { Token };
 ```
 
 **【补充说明】**：
 
-(1) 需要调试时，将XDEBUG参数拼接到`this.tokenUrl`即可
+(1) 需要调试时，将 XDEBUG 参数拼接到`this.tokenUrl`即可
 
+(2) 如果没有输出 code, 需要关闭开发者工具后再重新启动，会自动调用该方法，并输出 code
+[调用过生成的 token 已经被存储到浏览器的 Storage 中，便不会再调用 Token 请求接口，从而不产生 code]
 
-(2) 如果没有输出code, 需要关闭开发者工具后再重新启动，会自动调用该方法，并输出code
-[调用过生成的token已经被存储到浏览器的Storage中，便不会再调用Token请求接口，从而不产生code]
+### 9-9 商品详情接口
 
-### 9-9 商品详情接口 
+1.  定义控制器方法 getOne($id)
 
-1. 定义控制器方法 getOne($id)
+2.  定义路由 api/:version/product/:id
 
-2. 定义路由 api/:version/product/:id
-
-3. 模型类实现[隐藏部分字段、设置数据表关联、实现数据库查询]
+3.  模型类实现[隐藏部分字段、设置数据表关联、实现数据库查询]
 
         Product => properties => ProductProperty => 商品属性值[品名、口味、产地、保质期]
         Product => imgs => Image  => 商品主图
         ProductImage => imgs.imgUrl => Image => 商品详情图
 
-4. 异常处理信息提示
+4.  异常处理信息提示
 
 ```php
 [
@@ -1509,6 +1505,7 @@ Route::get('api/:version/product/:id', 'api/:version.Product/getOne', [], ['id'=
 对路由配置文件中，具有相同路由前缀的路由归为同一路由组，例如：
 
 对于几个对应产品信息的路由，
+
 ```php
 Route::get('api/:version/product/recent', 'api/:version.Product/getRecent');
 Route::get('api/:version/product/by_category', 'api/:version.Product/getAllInCategory');
@@ -1580,11 +1577,9 @@ Route::group('api/:version/product', [
 }
 ```
 
-
-
 2.问题：其中`imgs`的值为每个商品下的所有图片介绍，所以所有图片之间一定存在一定的顺序，其中`imgs`数组下的数据中存在`order`排序字段，如何对`imgs`的数据通过`order`进行排序？
 
-3.【答】：使用闭包函数构建查询器【相当于拼接sql】。
+3.【答】：使用闭包函数构建查询器【相当于拼接 sql】。
 
 ```php
 $product = self::with([
@@ -1598,9 +1593,9 @@ $product = self::with([
 
 4.思路分析：
 
-（1）要对imgs下的数据进行处理，需要获取到每组数据，然后对`order`字段进行排序。【通过闭包函数获取到每组数据】
+（1）要对 imgs 下的数据进行处理，需要获取到每组数据，然后对`order`字段进行排序。【通过闭包函数获取到每组数据】
 
-（2）除了要对每组数据进行按`order`排序，还需要处理`img_url`。【通过with链式操作处理`img_url`】
+（2）除了要对每组数据进行按`order`排序，还需要处理`img_url`。【通过 with 链式操作处理`img_url`】
 
 5.关于闭包函数的理解：
 
@@ -1610,4 +1605,183 @@ $product = self::with([
 }
 ```
 
-对于数组`imgs`，通过闭包函数，获取到每组数据，其中`$query`即作为参数接收每组数据的值，然后再对每组数据的`img_url`通过with进行数据关联。
+对于数组`imgs`，通过闭包函数，获取到每组数据，其中`$query`即作为参数接收每组数据的值，然后再对每组数据的`img_url`通过 with 进行数据关联。
+
+### 9-12 用户收货地址
+
+1.需求说明：
+
+用户收货地址接口信息需要进行身份验证，登录用户只能查看和操作自己的地址信息，未登录用户不能访问。
+
+为简化操作，当前将用户和用户地址的关联关系设定为一对一。
+
+2.思考点：
+
+（1）对登录状态的判断：
+
+当用户访问小程序时，调用`wx.login()`方法，并生成`code`,后台接口拿到 code 后生成 token，并用 token 以及配置的`app_id`和`app_secret`请求微信接口，并获取微信返回的`openid`等信息，存储到缓存中
+[以 token 为键，uid|wxResult|scope 组成的 json 数据为值]
+
+所以，创建或修改用户地址信息时，在处理地址信息和用户信息的关联时，使用的用户信息，应当是当前登录用户的信息，而不能是客户端传递的用户信息参数[可能传递有误，导致误操作到其他用户的地址信息]
+
+实现一定程度上的接口保护。
+
+（2）传入参数的检验
+
+验证器校验往往只能验证某个字段或某些字段的合法性，而客户端可能传入的参数比需要的参数多，或者传入了`uid`或者`user_id`，导致更新时覆盖了其他用户的数据信息，对系统的安全性造成影响，
+所以，在接收客户端传入参数时，需要进行多余字段的过滤。
+
+（3）对手机号的验证
+
+正则表达式的应用场景，正则模式`^1(3|4|5|6|7|8)[0-9]\d{8}$^`
+
+（4）**通过模型关联，实现用户地址的新增和更新**【新】
+
+通过关联模型方法，创建数据
+
+```php
+// 新增
+$user->address()->save($dataArray);
+```
+
+通过关联模型属性，对当前属性对应的记录进行更新
+
+```php
+// 更新
+$user->address->save($dataArray);
+```
+
+（5）模型关联方法的选择：
+
+模型关联方法的区分：
+
+    有主键关联无主键 =》 belongsTo
+    无主键关联有主键 =》 hasOne|hasMany
+
+（6）HTTP 状态码
+
+200：操作成功，服务器已成功处理了请求。说明：[如果是对您的 robots.txt 文件显示此状态码，则表示 Googlebot 已成功检索到该文件](https://blog.csdn.net/u014028956/article/details/47125403)
+
+201：创建成功，表示服务器执行成功，并且创建了新的资源
+
+设置接口调用成功后的状态码标识：
+
+```php
+return json(new SuccessMessage(), 201);
+```
+
+### 9-12-1 通过令牌获取用户标识
+
+1.  定义控制器方法 `createOrUpdate()`
+
+2.  定义路由 `api/:version/address`
+
+3.  验证器验证用户输入数据 [`name`, `mobile`, `province`, `city`, `country`, `detail`]
+
+4.  异常处理信息提示
+
+当数据不合法时抛出异常，而当操作成功时，也需要返回相应的数据信息。当前项目将抛出的成功信息也放在异常处理类库下。
+
+### 9-12-2 面向对象的方式封装获取 uid 方法
+
+1.通过令牌 token 即可获取缓存中对应的用户信息，而缓存中的信息包括`uid` `scope` `wxResult`[`openid` `session_key`]
+
+而在 http 请求时，token 保存在 header 头信息中，获取头信息中`token`的方法：
+
+`$token = Request::instance()->header('token');`
+
+2.通过 json 键值对的键，获取 cache 数据
+
+`Cache::get($token)`
+
+3.增强项目的扩展性，可将通过 token 获取变量的方法进行封装。
+
+4.代码实现：
+
+```php
+public static function getCurrentTokenVar($key)
+{
+    $token = Request::instance()->header('token');
+    $vars  = Cache::get($token);
+    if ( ! $vars) {
+        throw new TokenException();
+    } else {
+        if (!is_array($vars)) {
+            $vars = json_decode($vars, true);
+        }
+
+        if (isset($vars[$key])) {
+            return $vars[$key];
+        } else {
+            throw new Exception('尝试获取的Token变量不存在');
+        }
+    }
+}
+
+public static function getCurrentUid()
+{
+    $uid = self::getCurrentTokenVar('uid');
+    return $uid;
+}
+```
+
+### 9-12-3 模型新增和更新
+
+通过用户模型，进行面向对象方式的新增和更新
+
+（1）user 模型定义 address()关联方法，获取到用户地址信息，当用户地址信息不存在时，也通过**关联模型方法**，保存地址信息
+
+```php
+// 新增
+$user->address()->save($dataArray);
+```
+
+（2）user 模型通过 address()关联方法关联 user_address 数据表中对应的用户地址信息，通过关联获取的数据仍然可以作为模型的属性值使用，
+再通过**关联模型属性**，对当前属性对应的记录进行更新 [包含主键 id]
+
+```php
+// 更新
+$user->address->save($dataArray);
+```
+
+### 9-12-4 参数过滤
+
+封装处理客户端传入的参数的方法，由于当前用户的信息是通过缓存获取的，为避免用户传入的参数造成错误修改，所以需要对客户端传入数据进行过滤，
+如果携带用户 id 参数，则抛出异常，不再继续处理。除此之外，对于传入的无效、多余数据，进行过滤，仅接收验证器需要验证的字段信息。
+
+```php
+public function getDataByRule($params)
+{
+    if (isset($params['uid']) || isset($params['user_id'])) {
+        throw new ParameterException([
+            'msg' => '参数中包含非法的参数名user_id或者uid'
+        ]);
+    }
+    $newArray = [];
+    foreach ($this->rule as $key => $value) {
+        $newArray[$key] = $params[$key];
+    }
+
+    return $newArray;
+}
+```
+
+### 9-12-5 接口测试
+
+1.需要的参数
+
+- token: header 请求头 [通过微信小程序的开发者工具]
+
+- address 字段信息 [`name`, `mobile`, `province`, `city`, `country`, `detail`]
+
+  2.返回的数据
+
+```json
+{
+  "code": 201,
+  "msg": "ok",
+  "errorCode": 0
+}
+```
+
+并且通过设置返回值为带状态码的 json 数据，`json(new SuccessMessage(), 201)`，可将 http 的状态码也设置为`201`
