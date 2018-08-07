@@ -1786,12 +1786,11 @@ public function getDataByRule($params)
 
 并且通过设置返回值为带状态码的 json 数据，`json(new SuccessMessage(), 201)`，可将 http 的状态码也设置为`201`
 
-### 10-1 Scope权限作用域的应用
+### 10-1 Scope 权限作用域的应用
 
-该系统通过Scope的数值大小进行权限管理，但当前对权限直接使用数值定义，可读性不强，且不易维护，一旦修改，可能需要修改多处。
+该系统通过 Scope 的数值大小进行权限管理，但当前对权限直接使用数值定义，可读性不强，且不易维护，一旦修改，可能需要修改多处。
 
-
-又因为各个权限对应的数值是不同的，而php本身没有枚举类型的语法，所以现在定义一个类，通过常量的方式赋予权限数值。
+又因为各个权限对应的数值是不同的，而 php 本身没有枚举类型的语法，所以现在定义一个类，通过常量的方式赋予权限数值。
 
 ```php
 namespace app\lib\enum;
@@ -1803,25 +1802,25 @@ class ScopeEnum
 }
 ```
 
-在scope赋值时，使用：
+在 scope 赋值时，使用：
 
 ```php
 // api/service/UserToken.php prepareCachedValue()
-    
+
 //$cachedValue['scope'] = 16; // 数值越大，权限越多
 $cachedValue['scope'] = ScopeEnum::User;
 ```
 
 ### 10-2 前置方法
 
-1、使用tp5的前置方法之前，需要保证控制器继承了框架的基类控制器。
+1、使用 tp5 的前置方法之前，需要保证控制器继承了框架的基类控制器。
 
 ```php
 protected $beforeActionList = [];
 ```
 
 【注】：
-（1）前置方法不能设置为private访问方式。
+（1）前置方法不能设置为 private 访问方式。
 （2）设置前置关系的属性名：`$beforeActionList` [定义成其他名称则前置关系失效]
 
 2、代码实现：
@@ -1857,13 +1856,13 @@ public function second()
 
 `Route::get('api/:version/second', 'api/:version.Address/second');`
 
-### 10-3 对Adress接口做权限控制
+### 10-3 对 Address 接口做权限控制
 
 1.前置方法设置不生效的解决【注意】：
 
-对10-2中测试的前置方法生效，而对`createOrUpdate()`方法设置前置方法时不生效的原因：
+对 10-2 中测试的前置方法生效，而对`createOrUpdate()`方法设置前置方法时不生效的原因：
 
-> 默认情况下，URL是不区分大小写的，也就是说 URL里面的模块/控制器/操作名会自动转换为小写，控制器在最后调用的时候会转换为驼峰法处理。 [TP5手册](https://www.kancloud.cn/manual/thinkphp5/118012)
+> 默认情况下，URL 是不区分大小写的，也就是说 URL 里面的模块/控制器/操作名会自动转换为小写，控制器在最后调用的时候会转换为驼峰法处理。 [TP5 手册](https://www.kancloud.cn/manual/thinkphp5/118012)
 
 所以，测试用例中使用小写的`second`方法，可以正常访问，而使用驼峰法命名的`createOrUpdate()`方法不生效。
 
@@ -1894,4 +1893,114 @@ protected function checkPrimaryScope ()
         throw new ForbiddenException();
     }
 }
+```
+
+### 10-4 下单与支付的业务流程（库存量检测）
+
+业务流程分析：
+
+    1. 用户在选择商品后，向API提交包含它所选择商品的相关信息
+
+    2. API在接收到信息后，需要检查订单相关商品的库存量
+
+    3. 有库存，把订单数据存入数据库中 = 下单成功，返回客户端消息，告诉客户端可以支付了
+
+    4. 调用我们的支付接口，进行支付
+
+    5. 还需要再次进行库存量的检测 [下单与支付之间的时间间隙可能存在库存变化]
+
+    6. 库存充足 =》 服务器这边就可以调用微信的支付接口进行支付
+
+    7. 微信会返回给我们一个支付的结果（异步）
+
+    8. 成功：也需要进行库存量的检查
+
+    9. 成功：进行库存量的扣除
+
+### 10-5 下单与支付详细流程
+
+![](https://ws1.sinaimg.cn/large/005EgYNMgy1fu19tx686zj30s50e7q5y.jpg)
+
+### 10-6 重构微信权限控制前置方法
+
+下单接口不让管理员访问。
+
+1.重构理由：
+
+    当前项目的大多数接口都需要进行权限校验，这样的话，按照原先的流程，对每个控制器都需要加前置操作的关联属性和前置操作方法，而现在需要的前置处理都是访问权限的控制，所以，可以将访问权限控制的前置操作方法定义到公共的控制器方法中，最好的处理方式是定义`BaseController`控制器，将所有控制器都需要调用的方法放到该控制器中，提高代码的可复用性。
+
+2.代码实现：
+
+（1）自定义公共的控制器
+
+```php
+// application/api/controller/BaseController.php
+namespace app\api\controller;
+use think\Controller;
+class BaseController extends Controller{}
+```
+
+（2）让项目中其他控制器继承该控制器
+
+（3）在公共控制器中定义前置操作方法
+
+```php
+// 用户和管理员都能访问
+protected function checkPrimaryScope()
+{
+    TokenService::needPrimaryScope();
+}
+// 只有用户能访问，管理员不能访问的接口
+protected function checkExclusiveScope()
+{
+    TokenService::needExclusiveScope();
+}
+```
+
+（4）小程序访问权限的定义[是对 Token 的处理，故将该方法封装到 Service 层的 Token 下]
+
+```php
+// 需要用户和CMS管理员都可以访问的权限
+public static function needPrimaryScope()
+{
+    $scope = self::getCurrentTokenVar('scope');
+    if (!$scope) {
+        throw new TokenException();
+    }
+    if ($scope < ScopeEnum::User) {
+        throw new ForbiddenException();
+    }
+}
+
+// 只有用户可以访问的权限
+public static function needExclusiveScope()
+{
+    $scope = self::getCurrentTokenVar('scope');
+    if (!$scope) {
+        throw new TokenException();
+    }
+    if ($scope != ScopeEnum::User) {
+        throw new ForbiddenException();
+    }
+}
+```
+
+（5）控制器方法中的前置关系定义
+
+用户地址操作接口：
+
+```php
+// api/controller/v1/Address.php
+protected $beforeActionList = [
+    'checkPrimaryScope' => ['only' => 'createorupdate'],
+];
+```
+
+用户下单接口：
+
+```php
+// api/controller/v1/Order.php
+protected $beforeActionList = [
+    'checkExclusiveScope' => ['only' => 'placeOrder'],
+];
 ```

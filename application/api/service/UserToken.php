@@ -3,8 +3,8 @@
 namespace app\api\service;
 
 use app\lib\enum\ScopeEnum;
-use app\lib\exception\WechatException;
 use app\lib\exception\TokenException;
+use app\lib\exception\WechatException;
 
 class UserToken extends Token
 {
@@ -15,18 +15,20 @@ class UserToken extends Token
 
     public function __construct($code)
     {
-        $this->code      = $code;
-        $this->appid     = config('wx.app_id');
+        $this->code = $code;
+        $this->appid = config('wx.app_id');
         $this->appSecret = config('wx.app_secret');
-        $this->loginUrl  = sprintf(
+        $this->loginUrl = sprintf(
             config('wx.login_url'),
-            $this->appid, $this->appSecret, $this->code
+            $this->appid,
+            $this->appSecret,
+            $this->code
         );
     }
 
     public function get()
     {
-        $result   = curl_get($this->loginUrl);
+        $result = curl_get($this->loginUrl);
         $wxResult = json_decode($result, true);
 
         if (empty($wxResult)) {
@@ -45,7 +47,7 @@ class UserToken extends Token
     {
         throw new WechatException(
             [
-                'msg'       => $wxResult['errmsg'],
+                'msg' => $wxResult['errmsg'],
                 'errorCode' => $wxResult['errcode'],
             ]
         );
@@ -55,7 +57,7 @@ class UserToken extends Token
     {
         $now = time();
         // 1.拿到openid
-        $openid     = $wxResult['openid'];
+        $openid = $wxResult['openid'];
         $sessionKey = $wxResult['session_key'];
 
         // 2.查看数据库中该openid的记录是否已经存在[同一个用户的openid始终保持不变]
@@ -81,7 +83,7 @@ class UserToken extends Token
     private function newUser($openid)
     {
         $user = model('user')->create([
-           'openid' => $openid
+            'openid' => $openid,
         ]);
 
         return $user->id;
@@ -109,7 +111,7 @@ class UserToken extends Token
         if (!$request) {
             throw new TokenException([
                 'msg' => '服务器缓存异常',
-                'errorCode' => 10005
+                'errorCode' => 10005,
             ]);
         }
 

@@ -3,19 +3,20 @@
 namespace app\api\controller\v1;
 
 use app\api\validate\IDCollection;
-use think\Controller;
 use app\api\validate\IDMustPositiveInt;
 use app\lib\exception\ThemeMissException;
+use app\api\controller\BaseController;
 
-class Theme extends Controller
+class Theme extends BaseController
 {
     /**
-     * 获取需要的主题theme
+     * 获取需要的主题theme.
      *
      * @param string $ids
+     *
      * @return string $theme 一组theme模型
      */
-    public function getSimpleList($ids='')
+    public function getSimpleList($ids = '')
     {
         (new IDCollection())->goCheck();
 
@@ -36,6 +37,5 @@ class Theme extends Controller
         $res = model('theme')->getThemeWithProducts($id);
 
         return json($res);
-
     }
 }

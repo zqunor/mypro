@@ -2,13 +2,13 @@
 
 namespace app\api\controller\v1;
 
-use think\Controller;
 use app\lib\exception\CategoryMissException;
+use app\api\controller\BaseController;
 
-class Category extends Controller
+class Category extends BaseController
 {
     /**
-     * 显示资源列表
+     * 显示资源列表.
      *
      * @return
      */
@@ -16,10 +16,10 @@ class Category extends Controller
     {
         // $categories = model('Category')->with('img')->select();
         $categories = model('Category')->all([], 'img');
-        if($categories->isEmpty()) {
+        if ($categories->isEmpty()) {
             throw new CategoryMissException();
         }
+
         return $categories;
     }
-
 }

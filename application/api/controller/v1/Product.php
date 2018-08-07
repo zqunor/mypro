@@ -5,9 +5,9 @@ namespace app\api\controller\v1;
 use app\api\validate\Count;
 use app\api\validate\IDMustPositiveInt;
 use app\lib\exception\ProductMissException;
-use think\Controller;
+use app\api\controller\BaseController;
 
-class Product extends Controller
+class Product extends BaseController
 {
     public function getRecent($count = 15)
     {
@@ -26,8 +26,6 @@ class Product extends Controller
      * 通过分类id获取分类下的所有商品
      *
      * @param [int] $id 商品分类id
-     *
-     * @return void
      */
     public function getAllInCategory($id)
     {
@@ -58,8 +56,8 @@ class Product extends Controller
         if (!$product) {
             throw new ProductMissException(
                 [
-                    'msg'       => '当前产品无详情',
-                    'errorCode' => 20001
+                    'msg' => '当前产品无详情',
+                    'errorCode' => 20001,
                 ]
             );
         }
