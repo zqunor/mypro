@@ -65,7 +65,8 @@ class BaseValidate extends Validate
     {
         if (isset($params['uid']) || isset($params['user_id'])) {
             throw new ParameterException([
-                'msg' => '参数中包含非法的参数名user_id或者uid',
+                'msg' => '尝试非法操作（自己的令牌操作其他人数据）- 参数中包含非法的参数名user_id或者uid',
+                'errorCode' => 10003
             ]);
         }
         $newArray = [];

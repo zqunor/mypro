@@ -4,34 +4,31 @@ namespace app\api\controller\v1;
 
 use app\api\validate\AddressNew;
 use app\api\service\Token;
+use app\lib\enum\ScopeEnum;
+use app\lib\exception\ForbiddenException;
 use app\lib\exception\SuccessMessage;
+use app\lib\exception\TokenException;
 use app\lib\exception\UserException;
 use think\Controller;
 
 class Address extends Controller
 {
-
     protected $beforeActionList = [
-        'first' => ['only' => 'second']
+        'checkPrimaryScope' => ['only'=>'createorupdate']
     ];
 
     // 前置方法
-    protected function first ()
+    protected function checkPrimaryScope ()
     {
-        echo 'first';
+        $scope = Token::getCurrentTokenVar('scope');
+        if (!$scope) {
+            throw new TokenException();
+        }
+        if ($scope < ScopeEnum::User) {
+            throw new ForbiddenException();
+        }
     }
 
-    // API接口
-    public function second()
-    {
-        echo 'second';
-    }
-
-    /**
-     * 创建或更新用户的收货地址
-     *
-     * @return
-     */
     public function createOrUpdate()
     {
         $validate = new AddressNew();

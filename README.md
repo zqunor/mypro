@@ -1856,3 +1856,42 @@ public function second()
 （3）定义测试路由
 
 `Route::get('api/:version/second', 'api/:version.Address/second');`
+
+### 10-3 对Adress接口做权限控制
+
+1.前置方法设置不生效的解决【注意】：
+
+对10-2中测试的前置方法生效，而对`createOrUpdate()`方法设置前置方法时不生效的原因：
+
+> 默认情况下，URL是不区分大小写的，也就是说 URL里面的模块/控制器/操作名会自动转换为小写，控制器在最后调用的时候会转换为驼峰法处理。 [TP5手册](https://www.kancloud.cn/manual/thinkphp5/118012)
+
+所以，测试用例中使用小写的`second`方法，可以正常访问，而使用驼峰法命名的`createOrUpdate()`方法不生效。
+
+所以，在设置前置方法时，需要将方法名写成小写才能生效。
+即
+`'checkPrimaryScope' => ['only'=>'createorupdate']`
+
+2.前置方法进行权限控制
+
+（1）定义前置关系：
+
+```php
+protected $beforeActionList = [
+    'checkPrimaryScope' => ['only'=>'createorupdate']
+];
+```
+
+（2）前置方法中实现权限控制
+
+```php
+protected function checkPrimaryScope ()
+{
+    $scope = Token::getCurrentTokenVar('scope');
+    if (!$scope) {
+        throw new TokenException();
+    }
+    if ($scope < ScopeEnum::User) {
+        throw new ForbiddenException();
+    }
+}
+```

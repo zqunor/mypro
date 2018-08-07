@@ -30,10 +30,10 @@ class Token
     {
         $token = Request::instance()->header('token');
         $vars  = Cache::get($token);
-        if ( ! $vars) {
+        if (!$vars) {
             throw new TokenException();
         } else {
-            if ( !is_array($vars)) {
+            if (!is_array($vars)) {
                 $vars = json_decode($vars, true);
             }
 
