@@ -1785,3 +1785,74 @@ public function getDataByRule($params)
 ```
 
 并且通过设置返回值为带状态码的 json 数据，`json(new SuccessMessage(), 201)`，可将 http 的状态码也设置为`201`
+
+### 10-1 Scope权限作用域的应用
+
+该系统通过Scope的数值大小进行权限管理，但当前对权限直接使用数值定义，可读性不强，且不易维护，一旦修改，可能需要修改多处。
+
+
+又因为各个权限对应的数值是不同的，而php本身没有枚举类型的语法，所以现在定义一个类，通过常量的方式赋予权限数值。
+
+```php
+namespace app\lib\enum;
+
+class ScopeEnum
+{
+    const User = 16;
+    const Super = 32;
+}
+```
+
+在scope赋值时，使用：
+
+```php
+// api/service/UserToken.php prepareCachedValue()
+    
+//$cachedValue['scope'] = 16; // 数值越大，权限越多
+$cachedValue['scope'] = ScopeEnum::User;
+```
+
+### 10-2 前置方法
+
+1、使用tp5的前置方法之前，需要保证控制器继承了框架的基类控制器。
+
+```php
+protected $beforeActionList = [];
+```
+
+【注】：
+（1）前置方法不能设置为private访问方式。
+（2）设置前置关系的属性名：`$beforeActionList` [定义成其他名称则前置关系失效]
+
+2、代码实现：
+
+（1）基类控制器继承
+
+```php
+use think\Controller;
+class Address extends Controller{}
+```
+
+（2）定义前置方法和访问的接口
+
+```php
+protected $beforeActionList = [
+    'first' => ['only' => 'second']
+];
+
+// 前置方法
+protected function first ()
+{
+    echo 'first';
+}
+
+// API接口
+public function second()
+{
+    echo 'second';
+}
+```
+
+（3）定义测试路由
+
+`Route::get('api/:version/second', 'api/:version.Address/second');`

@@ -6,9 +6,27 @@ use app\api\validate\AddressNew;
 use app\api\service\Token;
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\UserException;
+use think\Controller;
 
-class Address
+class Address extends Controller
 {
+
+    protected $beforeActionList = [
+        'first' => ['only' => 'second']
+    ];
+
+    // 前置方法
+    protected function first ()
+    {
+        echo 'first';
+    }
+
+    // API接口
+    public function second()
+    {
+        echo 'second';
+    }
+
     /**
      * 创建或更新用户的收货地址
      *
