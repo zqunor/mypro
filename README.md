@@ -2004,3 +2004,86 @@ protected $beforeActionList = [
     'checkExclusiveScope' => ['only' => 'placeOrder'],
 ];
 ```
+
+### 10-7 编写一个复杂的验证器
+
+1.需求分析:
+
+    对下单接口提交的数据进行处理： 一个订单可以有多个商品，一个商品会有多个信息。 =》 提交的数据为二维数组
+
+2.验证器验证提交的订单信息 [双层验证]
+
+- 验证一： 对一个订单中的多个商品验证 =》 必须是数组
+
+- 验证二： 对一个订单中的一个商品的所有信息进行验证 =》 `product_id` `count`[必须是正整数]
+
+3.实现方式：
+
+(1) 第一层验证的实现：验证器自动验证 [自定义验证方法]
+
+验证规则：
+
+```php
+protected $rule = [
+    'products' => 'require|checkProducts',
+];
+```
+
+验证方法：
+
+```php
+protected function checkProducts($dataLists)
+{
+    if (!$dataLists) {
+        throw new ParameterException([
+            'msg' => '商品列表不能为空',
+        ]);
+    }
+
+    if (!is_array($dataLists)) {
+        throw new ParameterException([
+            'msg' => '商品参数不正确',
+        ]);
+    }
+
+    // 对具体的每个商品信息进行验证
+    foreach ($dataLists as $key => $data) {
+        $this->checkProduct($data);
+    }
+
+    return true;
+}
+```
+
+(2) 第二层验证的实现：手动验证 [嵌套于第一层验证中]
+
+验证规则：
+
+```php
+protected $singleRule = [
+    'product_id' => 'require|isPositiveInteger',
+    'count' => 'require|isPositiveInteger',
+];
+```
+
+验证方法[手动传递验证规则进行验证]：
+
+```php
+protected function checkProduct($product)
+{
+    $validate = new BaseValidate($this->singleRule);
+    $checkResult = $validate->batch()->check($product);
+    if (!$checkResult) {
+        throw new ParameterException([
+            'msg' => '商品信息参数错误',
+        ]);
+    }
+}
+```
+
+4.控制器调用验证器：
+
+```php
+// api/controller/v1/Order.php placeOrder()
+(new OrderPlace())->goCheck();
+```
