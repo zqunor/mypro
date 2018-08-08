@@ -2017,7 +2017,7 @@ protected $beforeActionList = [
 
 - 验证二： 对一个订单中的一个商品的所有信息进行验证 =》 `product_id` `count`[必须是正整数]
 
-3.实现方式：
+  3.实现方式：
 
 (1) 第一层验证的实现：验证器自动验证 [自定义验证方法]
 
@@ -2086,4 +2086,147 @@ protected function checkProduct($product)
 ```php
 // api/controller/v1/Order.php placeOrder()
 (new OrderPlace())->goCheck();
+```
+
+### 10-8|9 下单接口模型
+
+1.在 `service` 层中创建`Order`类，处理订单服务相关的操作。
+
+(1) 定义属性
+
+```php
+// 用户提交的订单商品信息
+protected $oProducts;
+// 根据用户提交的商品信息，查询到数据库中相应商品的信息(库存量)
+protected $products;
+// 用户id
+protected $uid;
+```
+
+(2) 定义功能方法
+
+```php
+public function place($uid, $oProducts){}
+```
+
+(3) 定义业务方法
+
+```php
+// 根据订单信息查找真实的商品信息 [id name price stock main_img_url]
+private function getProductsByOrder($oProducts)
+```
+
+```php
+// 获取订单中每个商品信息的状态 [id haveStock count name totalPrice]
+private function getProductStatus($oPId, $count, $products)
+```
+
+```php
+// 获取订单状态 [pass orderPrice pStatusArray]
+private function getOrderStatus(){}
+```
+
+2.根据订单信息查找真实的商品信息 [id name price stock main_img_url]
+
+```php
+private function getProductsByOrder($oProducts)
+{
+    if (!is_array($oProducts)) {
+        throw new ParameterException([
+            'msg' => '商品列表参数错误',
+        ]);
+    }
+
+    // 根据用户传入的所有订单商品的 product_id
+    $oPIds = array_column($oProducts, 'product_id');
+
+    // 根据商品id信息查询数据库，获得数据库中对应的商品信息
+    $products = Product::all($oPIds)->visible(['id', 'name', 'price', 'stock', 'main_img_url'])->toArray();
+
+    return $products;
+}
+```
+
+模型类方法用法：
+
+- [all()](https://www.kancloud.cn/manual/thinkphp5/135191)
+
+参数没有使用索引就是查询主键为参数的所有结果; 有索引则是查询相应字段符合条件的所有结果 [返回结果为二维数组]
+
+- [visible()](https://www.kancloud.cn/manual/thinkphp5/138667)
+
+设置只显示的字段信息
+
+- toArray()
+
+针对数据集对象有效，[默认的数据集返回结果的类型是一个数组,可以配置默认返回结果的类型]
+
+```php
+// config.php文件中配置数据集返回类型
+'resultset_type' => 'collection',
+```
+
+3.获取订单中每个商品信息的状态 [id haveStock count name totalPrice]
+
+```php
+private function getProductStatus($oPId, $count, $products)
+{
+    // 当前处理的商品对应获取的数据库商品列表中的索引值
+    $pIndex = -1;
+    // 需要记录的商品信息
+    $pStatus = [
+        'id' => null,
+        'haveStock' => false,
+        'count' => 0,
+        'name' => '',
+        'totalPrice' => 0,
+    ];
+
+    // 获取索引值
+    for ($i = 0; $i < count($products); $i++) {
+        if ($products[$i]['id'] == $oPId) {
+            $pIndex = $i;
+        }
+    }
+
+    // 不存在时，抛出异常信息； 存在时，则处理需要的数据信息，并返回
+    if ($pIndex == -1) {
+        // 客户端传递的product_id有可能根本不存在
+        throw new OrderException([
+            'msg' => 'id为' . $oPId . '的商品不存在，创建订单失败',
+        ]);
+    } else {
+        $product = $products[$pIndex];
+        $pStatus['id'] = $oPId;
+        $pStatus['count'] = $count;
+        $pStatus['name'] = $products[$pIndex]['name'];
+        $pStatus['totalPrice'] = $products[$pIndex]['price'] * $oCount;
+        $pStatus['haveStock'] = ($product[$pIndex]['stock'] >= $oCount) ? true : false;
+    }
+
+    return $pStatus;
+}
+```
+
+4.获取订单状态 [pass orderPrice pStatusArray]
+
+```php
+private function getOrderStatus()
+{
+    $status = [
+        'pass' => true,
+        'orderPrice' => 0,
+        'pStatusArray' => [], //订单商品的详细信息
+    ];
+
+    foreach ($this->oProducts as $key => $oProduct) {
+        $pStatus = $this->getProductStatus($oProduct['product_id'], $oProduct['count'], $this->products);
+        $status['pass'] = $pStatus['haveStock'];
+        $status['orderPrice'] += $pStatus['totalPrice'];
+
+        array_push($status['pStatusArray'], $pStatus);
+    }
+
+    return $status;
+}
 ```
