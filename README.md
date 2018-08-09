@@ -2168,6 +2168,11 @@ private function getProductsByOrder($oProducts)
 
 3.获取订单中每个商品信息的状态 [id haveStock count name totalPrice]
 
+- id 记录商品的id
+- haveStock 记录商品是否有库存
+- count 记录商品的购买数量
+- totalPrice 记录某个商品的总价
+
 ```php
 private function getProductStatus($oPId, $count, $products)
 {
@@ -2209,6 +2214,10 @@ private function getProductStatus($oPId, $count, $products)
 ```
 
 4.获取订单状态 [pass orderPrice pStatusArray]
+
+- pass 记录该订单是否可以下单成功 [库存量验证]
+- orderPrice 订单总价
+- pStatusArray 订单中所有商品和所有商品的详细信息 [用户历史订单]
 
 ```php
 private function getOrderStatus()
