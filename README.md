@@ -2347,3 +2347,88 @@ public function getUserAddress()
     return $userAddress->toArray();
 }
 ```
+
+### 10-12 订单创建
+
+1.【调整】
+
+数组索引名的命名方式： `驼峰法` 转为 `下划线法`
+
+2.生成订单编号方法
+
+```php
+public function makeOrderNo()
+{
+    $yCode = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J');
+    $orderSn = $yCode[intval(date('Y')) - 2017] . strtoupper(dechex(date('m')))
+                . date('d') . substr(time(), -5)
+                . substr(microtime(), 2, 5) . sprintf('%02d', rand(0, 99));
+
+    return $orderSn;
+}
+```
+
+3.定义处理订单信息的方法
+
+```php
+private function createOrder($snap){}
+```
+
+4.处理订单信息并保存到订单表 [order 表]
+
+```php
+$order = new OrderModel();
+
+$orderNo = $this->makeOrderNo();
+$order->order_no = $orderNo;
+$order->user_id = $this->uid;
+$order->total_price = $snap['order_price'];
+$order->total_count = $snap['total_count'];
+$order->snap_items = $snap['p_status'];
+$order->snap_address = $snap['snap_address'];
+$order->snap_img = $snap['snap_img'];
+
+$order->save();
+```
+
+5.通过模型对象获取属性值
+
+```php
+$orderId = $order->id;
+$orderCreateTime = $order->create_time;
+```
+
+6.处理订单商品信息并保存到订单-商品表 [`order_product`]
+
+```php
+foreach ($this->oProducts as &$op) {
+    $op['order_id'] = $orderId;
+}
+
+$orderProduct = new OrderProduct();
+$orderProduct->saveAll($this->oProducts);
+```
+
+通过引用传值，得到`$this->oProducts`的结构为：
+
+    [
+        [
+            'product_id' => '',
+            'count' => '',
+            'order_id' => ''
+        ],
+        [
+            'product_id' => '',
+            'count' => '',
+            'order_id' => ''
+        ],
+    ]
+
+7.对数据表的操作进行`try-catch`异常捕获
+
+8.调用创建订单方法
+
+```php
+// api/service/Order place()
+$order = $this->createOrder($orderSnap);
+```
