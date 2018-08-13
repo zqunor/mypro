@@ -2168,7 +2168,7 @@ private function getProductsByOrder($oProducts)
 
 3.获取订单中每个商品信息的状态 [id haveStock count name totalPrice]
 
-- id 记录商品的id
+- id 记录商品的 id
 - haveStock 记录商品是否有库存
 - count 记录商品的购买数量
 - totalPrice 记录某个商品的总价
@@ -2267,3 +2267,83 @@ private function getOrderStatus()
 4.订单信息 [编号`order_no`、订单快照名称`snap_name`、数量`total_count`、价格`total_price`、操作时间`create_time`|`update_time`|`delete_time`]
 
 5.订单的用户的信息 [`user_id`]
+
+### 10-11 订单快照的实现
+
+1.生成订单快照方法的定义
+
+```php
+private function snapOrder($status){}
+```
+
+【调整】：订单状态的数据结构[添加对订单商品总数量的记录]：
+
+```php
+private function getOrderStatus(){}
+```
+
+- 添加`totalCount`信息
+
+```php
+$status = [
+    'totalCount' => 0, // 订单商品的总数量，不是商品种类的数量
+];
+```
+
+- `totalCount`的数据梳理
+
+```php
+$status['totalCount'] += $oProduct['count'];
+```
+
+2.订单快照的数据结构
+
+```php
+$snap = [
+    // 订单总价
+    'orderPrice' => 0,
+    // 订单商品总数量
+    'totalCount' => 0,
+    // 商品的信息[id haveStock count name totalPrice]
+    'pStatus' => [],
+    // 下单时的地址信息
+    'snapAddress' => null,
+    // 历史订单页显示的订单名称 [仅显示一个订单下的第一个商品，而不是所有商品，多个商品加'等'字]
+    'snapName' => '',
+    // 历史订单页显示的订单图片 [第一个商品的图片]
+    'snapImg' => '',
+];
+```
+
+3.数据结构的数据获取
+
+```php
+$snap['orderPrice'] = $status['orderPrice'];
+$snap['totalCount'] = $status['totalCount'];
+$snap['pStatus'] = $status['pStatusArray'];
+$snap['snapAddress'] = json_encode($this->getUserAddress());
+$snap['snapName'] = $this->products[0]['name'];
+$snap['snapImg'] = $this->products[0]['main_img_url'];
+// 当订单商品数量大于1时，给订单快照名称添加'等'字
+if (count($this->products) > 1) {
+    $snap['snapName'] .= '等';
+}
+```
+
+4.获取用户下单时的收货地址 [将数据集对象转化为数组`toArray()`]
+
+```php
+public function getUserAddress()
+{
+    $userAddress = UserAddress::where('user_id', '=', $this->uid)->find();
+
+    if (!$userAddress) {
+        throw new UserException([
+            'msg' => '用户收货地址不存在，下单失败',
+            'errorCode' => 60001,
+        ]);
+    }
+
+    return $userAddress->toArray();
+}
+```
