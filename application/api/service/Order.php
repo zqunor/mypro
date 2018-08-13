@@ -8,11 +8,14 @@
 
 namespace app\api\service;
 
+use app\api\model\Order as OrderModel;
+use app\api\model\OrderProduct;
 use app\api\model\Product as ProductModel;
 use app\api\model\UserAddress;
 use app\lib\exception\OrderException;
 use app\lib\exception\ParameterException;
 use app\lib\exception\UserException;
+use think\Exception;
 
 class Order
 {
@@ -38,29 +41,77 @@ class Order
 
         // 开始创建订单
         $orderSnap = $this->snapOrder($status);
+        $order = $this->createOrder($orderSnap);
+    }
+
+    private function createOrder($snap)
+    {
+        try {
+            $order = new OrderModel();
+
+            $orderNo = $this->makeOrderNo();
+            $order->order_no = $orderNo;
+            $order->user_id = $this->uid;
+            $order->total_price = $snap['order_price'];
+            $order->total_count = $snap['total_count'];
+            $order->snap_items = $snap['p_status'];
+            $order->snap_address = $snap['snap_address'];
+            $order->snap_img = $snap['snap_img'];
+
+            $order->save();
+
+            $orderId = $order->id;
+            $orderCreateTime = $order->create_time;
+            foreach ($this->oProducts as &$op) {
+                $op['order_id'] = $orderId;
+            }
+
+            $orderProduct = new OrderProduct();
+            $orderProduct->saveAll($this->oProducts);
+
+            return [
+                'order_no' => $orderNo,
+                'order_id' => $orderId,
+                'create_time' => $orderCreateTime,
+            ];
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function makeOrderNo()
+    {
+        $yCode = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J');
+        $orderSn = $yCode[intval(date('Y')) - 2017] . strtoupper(dechex(date('m')))
+            . date('d') . substr(time(), -5)
+            . substr(microtime(), 2, 5) . sprintf('%02d', rand(0, 99));
+
+        return $orderSn;
     }
 
     // 生成订单快照
     private function snapOrder($status)
     {
         $snap = [
-            'orderPrice' => 0,
-            'totalCount' => 0,
-            'pStatus' => [],
-            'snapAddress' => null,
-            'snapName' => '',
-            'snapImg' => '',
+            'order_price' => 0,
+            'total_count' => 0,
+            'p_status' => null,
+            'snap_address' => null,
+            'snap_name' => '',
+            'snap_img' => '',
         ];
 
-        $snap['orderPrice'] = $status['orderPrice'];
-        $snap['totalCount'] = $status['totalCount'];
-        $snap['pStatus'] = $status['pStatusArray'];
-        $snap['snapAddress'] = json_encode($this->getUserAddress());
-        $snap['snapName'] = $this->products[0]['name'];
-        $snap['snapImg'] = $this->products[0]['main_img_url'];
+        $snap['order_price'] = $status['order_price'];
+        $snap['total_count'] = $status['total_count'];
+        $snap['p_status'] = json_encode($status['p_status_array']);
+        $snap['snap_address'] = json_encode($this->getUserAddress());
+        $snap['snap_name'] = $this->products[0]['name'];
+        $snap['snap_img'] = $this->products[0]['main_img_url'];
         if (count($this->products) > 1) {
-            $snap['snapName'] .= '等';
+            $snap['snap_name'] .= '等';
         }
+
+        return $snap;
     }
 
     public function getUserAddress()
@@ -81,18 +132,18 @@ class Order
     {
         $status = [
             'pass' => true,
-            'orderPrice' => 0,
-            'totalCount' => 0, // 订单商品的总数量，不是商品种类的数量
-            'pStatusArray' => [], //订单商品的详细信息
+            'order_price' => 0,
+            'total_count' => 0, // 订单商品的总数量，不是商品种类的数量
+            'p_status_array' => [], //订单商品的详细信息
         ];
 
         foreach ($this->oProducts as $key => $oProduct) {
             $pStatus = $this->getProductStatus($oProduct['product_id'], $oProduct['count'], $this->products);
             $status['pass'] = $pStatus['haveStock'];
-            $status['orderPrice'] += $pStatus['totalPrice'];
-            $status['totalCount'] += $oProduct['count'];
+            $status['order_price'] += $pStatus['total_price'];
+            $status['total_count'] += $oProduct['count'];
 
-            array_push($status['pStatusArray'], $pStatus);
+            array_push($status['p_status_array'], $pStatus);
         }
 
         return $status;
@@ -103,10 +154,10 @@ class Order
         $pIndex = -1;
         $pStatus = [
             'id' => null,
-            'haveStock' => false,
+            'have_stock' => false,
             'count' => 0,
             'name' => '',
-            'totalPrice' => 0,
+            'total_price' => 0,
         ];
 
         for ($i = 0; $i < count($products); $i++) {
@@ -125,8 +176,8 @@ class Order
             $pStatus['id'] = $oPId;
             $pStatus['count'] = $count;
             $pStatus['name'] = $products[$pIndex]['name'];
-            $pStatus['totalPrice'] = $products[$pIndex]['price'] * $oCount;
-            $pStatus['haveStock'] = ($product[$pIndex]['stock'] >= $oCount) ? true : false;
+            $pStatus['total_price'] = $products[$pIndex]['price'] * $oCount;
+            $pStatus['have_stock'] = ($product[$pIndex]['stock'] >= $oCount) ? true : false;
         }
 
         return $pStatus;
