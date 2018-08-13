@@ -60,6 +60,7 @@ class Order
             $order->snap_items = $snap['p_status'];
             $order->snap_address = $snap['snap_address'];
             $order->snap_img = $snap['snap_img'];
+            $order->snap_name = $snap['snap_name'];
 
             $order->save();
 
@@ -86,8 +87,8 @@ class Order
     {
         $yCode = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J');
         $orderSn = $yCode[intval(date('Y')) - 2017] . strtoupper(dechex(date('m')))
-            . date('d') . substr(time(), -5)
-            . substr(microtime(), 2, 5) . sprintf('%02d', rand(0, 99));
+        . date('d') . substr(time(), -5)
+        . substr(microtime(), 2, 5) . sprintf('%02d', rand(0, 99));
 
         return $orderSn;
     }
@@ -142,7 +143,9 @@ class Order
 
         foreach ($this->oProducts as $key => $oProduct) {
             $pStatus = $this->getProductStatus($oProduct['product_id'], $oProduct['count'], $this->products);
-            $status['pass'] = $pStatus['haveStock'];
+            if (!$pStatus['have_stock']) {
+                $status['pass'] = false;
+            }
             $status['order_price'] += $pStatus['total_price'];
             $status['total_count'] += $oProduct['count'];
 
@@ -152,7 +155,7 @@ class Order
         return $status;
     }
 
-    private function getProductStatus($oPId, $count, $products)
+    private function getProductStatus($oPId, $oCount, $products)
     {
         $pIndex = -1;
         $pStatus = [
@@ -177,10 +180,10 @@ class Order
         } else {
             $product = $products[$pIndex];
             $pStatus['id'] = $oPId;
-            $pStatus['count'] = $count;
+            $pStatus['count'] = $oCount;
             $pStatus['name'] = $products[$pIndex]['name'];
             $pStatus['total_price'] = $products[$pIndex]['price'] * $oCount;
-            $pStatus['have_stock'] = ($product[$pIndex]['stock'] >= $oCount) ? true : false;
+            $pStatus['have_stock'] = ($products[$pIndex]['stock'] >= $oCount) ? true : false;
         }
 
         return $pStatus;

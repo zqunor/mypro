@@ -2462,3 +2462,88 @@ $status = $order->place($uid, $oProducts);
 
 return $status;
 ```
+
+### 10-14 测试订单接口
+
+1.调整几处细节错误：
+
+- 验证器类的引入 [`use app\api\validate\OrderPlace;`]
+
+- $oCount 变量名 [`$count` => `$oCount`]
+
+- `have_stock`数组索引名的规范 [`$pStatus['haveStock']` => `$pStatus['have_stock']`]
+
+- $products 数组元素调用时变量名 [`$product` => `$products`]
+
+- 遗漏快照名称的赋值
+
+      ```php
+      // api/controller/v1/Order.php createOrder()
+      $order->snap_name = $snap['snap_name'];
+      ```
+
+2.测试接口成功 [成功创建订单信息和订单商品关联信息]
+
+- 请求参数：
+
+```json
+{
+  "products": [
+    {
+      "product_id": 1,
+      "count": 4
+    },
+    {
+      "product_id": 2,
+      "count": 4
+    }
+  ]
+}
+```
+
+- 返回结果：
+
+```json
+{
+  "order_no": "B813476849200914",
+  "order_id": "7",
+  "create_time": "1970-01-01 08:00:00",
+  "pass": true
+}
+```
+
+3.测试库存不足时的情况 [将商品表中相应商品的库存手动设为 0]
+
+※ **【找到系统中存在的 bug】**：
+
+（1）问题描述：
+
+    当一个订单中有多个商品时，第一个商品的库存充足，最后一个商品不充足时，可以正常判断为下单失败
+
+    当前面的商品库存不充足，最后一个商品的库存充足时，应该判断为下单失败，但是实际却是下单成功。
+
+（2）找到问题：
+
+```php
+// api/service/Order.php
+private function getOrderStatus()
+{
+    // ...
+    foreach ($this->oProducts as $key => $oProduct) {
+        $pStatus = $this->getProductStatus($oProduct['product_id'], $oProduct['count'], $this->products);
+        // 原来的处理是
+        // $status['pass'] = $pStatus['have_stock'];
+        // 这将导致之前库存不足的结果被后面库存充足时的值覆盖，造成误判
+
+        // 此处修改为：
+        if (!$pStatus['have_stock']) {
+            $status['pass'] = false;
+        }
+        // 由于初始化时该值为true, 所以如果有库存不足的情况就将该值置为false，而不是每次都赋值
+
+        //...
+    }
+
+    return $status;
+}
+```

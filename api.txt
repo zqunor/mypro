@@ -11,3 +11,6 @@ http://mypro.com/api/v1/product/1
 http://mypro.com/api/v1/token/user
 
 http://mypro.com/api/v1/address
+
+http://mypro.com/api/v1/order
+{"products":[{"product_id":1,"count":4},{"product_id":2,"count":4}]}
