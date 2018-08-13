@@ -2477,10 +2477,10 @@ return $status;
 
 - 遗漏快照名称的赋值
 
-      ```php
-      // api/controller/v1/Order.php createOrder()
-      $order->snap_name = $snap['snap_name'];
-      ```
+        ```php
+        // api/controller/v1/Order.php createOrder()
+        $order->snap_name = $snap['snap_name'];
+        ```
 
 2.测试接口成功 [成功创建订单信息和订单商品关联信息]
 
@@ -2546,4 +2546,25 @@ private function getOrderStatus()
 
     return $status;
 }
+```
+
+### 10-15 自动写入时间戳
+
+1.需求分析：
+
+    很多模型对应的数据表都需要记录操作的时间并写入时间戳，这样如果手动操作的话步骤比较繁琐，所以可以使用TP5框架自动写入时间戳的功能。
+
+2.实现方法：
+
+（1）局部实现 [每个模型类中定义属性`$autoWriteTimestamp`]
+
+```php
+protected $autoWriteTimestamp = true;
+```
+
+（2）全局实现 [数据库配置文件]
+
+```php
+// 开启自动写入时间戳字段
+'auto_timestamp' => true,
 ```
