@@ -3,7 +3,7 @@
  * @Author: zhouqun
  * @Date: 2018-08-08 10:39:54
  * @Last Modified by: zhouqun
- * @Last Modified time: 2018-08-08 17:47:00
+ * @Last Modified time: 2018-08-09 15:02:05
  */
 
 namespace app\api\service;
@@ -26,6 +26,15 @@ class Order
         $this->uid = $uid;
         $this->oProducts = $oProducts;
         $this->products = $this->getProductsByOrder($oProducts);
+
+        $status = $this->getOrderStatus();
+        if (!$status['pass']) {
+            // 进行标记【生成订单号时进行判断】
+            $status['order_id'] = -1;
+            return $status;
+        }
+
+        // 开始创建订单
     }
 
     private function getOrderStatus()
