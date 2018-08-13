@@ -2432,3 +2432,33 @@ $orderProduct->saveAll($this->oProducts);
 // api/service/Order place()
 $order = $this->createOrder($orderSnap);
 ```
+
+### 10-13 一对多关系的新增操作
+
+一对多模型关系的实现分两个过程:
+
+    先保存一 [新增一条记录]
+    再保存多 [新增关联表的多条记录]
+
+1.完成 service 层下单方法的调用和结果处理
+
+```php
+// api/service/Orde.php place()
+// status中的pass记录的是库存量是否检测通过的信息
+$orderSnap = $this->snapOrder($status);
+$order = $this->createOrder($orderSnap);
+// 告诉客户端订单是够通过
+$order['pass'] = true;
+
+return $order;
+```
+
+2.完成控制器中的 api 接口方法调用
+
+```php
+// api/controller/v1/Order.php placeOrder()
+$order = new OrderService();
+$status = $order->place($uid, $oProducts);
+
+return $status;
+```
