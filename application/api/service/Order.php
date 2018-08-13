@@ -8,9 +8,11 @@
 
 namespace app\api\service;
 
-use app\api\model\Product;
+use app\api\model\Product as ProductModel;
+use app\api\model\UserAddress;
 use app\lib\exception\OrderException;
 use app\lib\exception\ParameterException;
+use app\lib\exception\UserException;
 
 class Order
 {
@@ -35,6 +37,44 @@ class Order
         }
 
         // 开始创建订单
+        $orderSnap = $this->snapOrder($status);
+    }
+
+    // 生成订单快照
+    private function snapOrder($status)
+    {
+        $snap = [
+            'orderPrice' => 0,
+            'totalCount' => 0,
+            'pStatus' => [],
+            'snapAddress' => null,
+            'snapName' => '',
+            'snapImg' => '',
+        ];
+
+        $snap['orderPrice'] = $status['orderPrice'];
+        $snap['totalCount'] = $status['totalCount'];
+        $snap['pStatus'] = $status['pStatusArray'];
+        $snap['snapAddress'] = json_encode($this->getUserAddress());
+        $snap['snapName'] = $this->products[0]['name'];
+        $snap['snapImg'] = $this->products[0]['main_img_url'];
+        if (count($this->products) > 1) {
+            $snap['snapName'] .= '等';
+        }
+    }
+
+    public function getUserAddress()
+    {
+        $userAddress = UserAddress::where('user_id', '=', $this->uid)->find();
+
+        if (!$userAddress) {
+            throw new UserException([
+                'msg' => '用户收货地址不存在，下单失败',
+                'errorCode' => 60001,
+            ]);
+        }
+
+        return $userAddress->toArray();
     }
 
     private function getOrderStatus()
@@ -42,6 +82,7 @@ class Order
         $status = [
             'pass' => true,
             'orderPrice' => 0,
+            'totalCount' => 0, // 订单商品的总数量，不是商品种类的数量
             'pStatusArray' => [], //订单商品的详细信息
         ];
 
@@ -49,6 +90,7 @@ class Order
             $pStatus = $this->getProductStatus($oProduct['product_id'], $oProduct['count'], $this->products);
             $status['pass'] = $pStatus['haveStock'];
             $status['orderPrice'] += $pStatus['totalPrice'];
+            $status['totalCount'] += $oProduct['count'];
 
             array_push($status['pStatusArray'], $pStatus);
         }
@@ -105,7 +147,7 @@ class Order
         }
 
         $oPIds = array_column($oProducts, 'product_id');
-        $products = Product::all($oPIds)->visible(['id', 'name', 'price', 'stock', 'main_img_url'])->toArray();
+        $products = ProductModel::all($oPIds)->visible(['id', 'name', 'price', 'stock', 'main_img_url'])->toArray();
 
         return $products;
     }
