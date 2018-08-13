@@ -2239,3 +2239,31 @@ private function getOrderStatus()
     return $status;
 }
 ```
+
+### 10-10 订单快照
+
+需要对每个订单的详细信息进行记录，包括地址信息、订单的商品信息等。
+
+#### 1.订单商品信息 `order_product`
+
+(1) 存储订单的商品信息:
+
+`order_id product_id count delete_time update_time`
+
+(2) 订单和订单商品的对应关系： `多对多`
+
+#### 2.订单表信息 `order`
+
+1.记录订单的地址信息(快照) [`snap_address`]
+
+    用户的地址信息可能会改变，如果通过关联进行动态查询的话，可能实际收货信息与获取的信息不相同。所以直接存储地址快照信息。
+
+2.记录订单的商品信息(快照) [`snap_items` `snap_img`]
+
+    由于商品的价格和img等信息会动态变化，如果不另行记录，以后查询时，可能会出现订单和商品信息之间的误差
+
+3.订单的支付信息 [`status` `prepay_id`]
+
+4.订单信息 [编号`order_no`、订单快照名称`snap_name`、数量`total_count`、价格`total_price`、操作时间`create_time`|`update_time`|`delete_time`]
+
+5.订单的用户的信息 [`user_id`]
