@@ -77,4 +77,23 @@ class Token
             throw new ForbiddenException();
         }
     }
+
+    /**
+     * 验证某个uid是否为当前用户
+     *
+     * @param [string] $uid
+     * @return boolean
+     */
+    public static function isValidateOperate($uid)
+    {
+        if (!$uid) {
+            throw new Exception('检验的用户id不能为空');
+        }
+        $currentUid = self::getCurrentUid();
+        if ($currentUid == $uid) {
+            return true;
+        }
+
+        return false;
+    }
 }

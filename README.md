@@ -921,7 +921,7 @@ class ProductMissException extends BaseException
 【使用方法】：
 
 ```php
-// 使用数据集，临时隐藏某些字段
+// 使用数据集对象的hidden()方法，临时隐藏某些字段
 $productCollection = collection($products);
 $products = $productCollection->hidden(['summary']);
 ```
@@ -2600,3 +2600,58 @@ Db::commit();
 ```php
 Db::rollback();
 ```
+
+### 10-17 关于微信支付
+
+支付功能只对企业用户开放，不对个人开发者开放。
+
+需要：
+
+- 商铺号
+- 商铺密码
+
+### 10-18 支付的服务器端编写（一）-- 预支付请求微信api
+
+支付流程进行到下单成功，现在需要调用微信的支付API, 进行预订单验证[验证商户信息和库存量]，验证通过后，获取微信端返回的支付参数，再进行下一步操作。
+
+[微信开发文档--统一下单](https://pay.weixin.qq.com/wiki/doc/api/wxa/wxa_api.php?chapter=9_1)
+
+必填参数：
+
+```bash
+小程序id--appid
+商户号--mch_id
+随机字符串--nonce_str
+签名--sign
+商品描述--body
+商户订单号--out_trace_no
+标价金额--total_free
+终端IP--spbill_create_ip
+通知地址--notify_url
+交易类型--trade_type
+```
+
+### 10-19 支付的服务器端编写（二）-- 预支付库存量检测
+
+```php
+public function checkOrderStock($orderId)
+{
+    $oProducts = OrderModel::where('order_id', '=', $orderId)->select();
+    $this->oProducts = $oProducts;
+    $this->products = $this->getProductsByOrder($oProducts);
+    $status = $this->getOrderStatus();
+
+    return $status;
+}
+```
+
+### 10-20 支付的服务器端编写（三）-- 预订单校验
+
+1.订单号可能不存在
+2.订单号存在，但是订单号和当前用户不匹配
+3.检测订单是否已经被支付过
+4.库存量检测
+
+### 10-21 支付的服务器端编写（四）-- 请求微信，获取支付参数
+
+application/extend下的类文件的调用 =》 手动加载类库
